@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 
+using namespace mapbox;
 
 void testPack1() {
     std::cout << "batch pack allocates same height bins on existing shelf";
@@ -15,7 +16,7 @@ void testPack1() {
     bins.emplace_back(10, 10);
     results = sprite.pack(bins);
 
-    assert(results[0].x == 0  && results[0].y == 0 && results[0].w == 10 && results[0].h == 10);
+    assert(results[0].x ==  0 && results[0].y == 0 && results[0].w == 10 && results[0].h == 10);
     assert(results[1].x == 10 && results[1].y == 0 && results[1].w == 10 && results[1].h == 10);
     assert(results[2].x == 20 && results[2].y == 0 && results[2].w == 10 && results[2].h == 10);
 
@@ -33,7 +34,7 @@ void testPack2() {
     bins.emplace_back(10, 20);
     results = sprite.pack(bins);
 
-    assert(results[0].x == 0 && results[0].y == 0  && results[0].w == 10 && results[0].h == 10);
+    assert(results[0].x == 0 && results[0].y ==  0 && results[0].w == 10 && results[0].h == 10);
     assert(results[1].x == 0 && results[1].y == 10 && results[1].w == 10 && results[1].h == 15);
     assert(results[2].x == 0 && results[2].y == 25 && results[2].w == 10 && results[2].h == 20);
 
@@ -52,10 +53,10 @@ void testPack3() {
     bins.emplace_back(10,  9);
     results = sprite.pack(bins);
 
-    assert(results[0].x == 0  && results[0].y == 0  && results[0].w == 10 && results[0].h == 10);
-    assert(results[1].x == 0  && results[1].y == 10 && results[1].w == 10 && results[1].h == 15);
-    assert(results[2].x == 0  && results[2].y == 25 && results[2].w == 10 && results[2].h == 20);
-    assert(results[3].x == 10 && results[3].y == 0  && results[3].w == 10 && results[3].h == 9 );
+    assert(results[0].x ==  0 && results[0].y ==  0 && results[0].w == 10 && results[0].h == 10);
+    assert(results[1].x ==  0 && results[1].y == 10 && results[1].w == 10 && results[1].h == 15);
+    assert(results[2].x ==  0 && results[2].y == 25 && results[2].w == 10 && results[2].h == 20);
+    assert(results[3].x == 10 && results[3].y ==  0 && results[3].w == 10 && results[3].h ==  9);
 
     std::cout << " - OK" << std::endl;
 }
@@ -74,7 +75,7 @@ void testPack4() {
     bins.emplace_back(10, 10);
     sprite.pack(bins, options);
 
-    assert(bins[0].x == 0  && bins[0].y == 0 && bins[0].w == 10 && bins[0].h == 10);
+    assert(bins[0].x ==  0 && bins[0].y == 0 && bins[0].w == 10 && bins[0].h == 10);
     assert(bins[1].x == 10 && bins[1].y == 0 && bins[1].w == 10 && bins[1].h == 10);
     assert(bins[2].x == 20 && bins[2].y == 0 && bins[2].w == 10 && bins[2].h == 10);
 
@@ -96,14 +97,14 @@ void testPack5() {
     bins.emplace_back(10, 10);
     results = sprite.pack(bins, options);
 
-    assert(results[0].x == 0  && results[0].y == 0  && results[0].w == 10 && results[0].h == 10);
-    assert(results[1].x == 10 && results[1].y == 0  && results[1].w == 10 && results[1].h == 10);
-    assert(results[2].x == 0  && results[2].y == 10 && results[2].w == 10 && results[2].h == 10);
+    assert(results[0].x ==  0 && results[0].y ==  0 && results[0].w == 10 && results[0].h == 10);
+    assert(results[1].x == 10 && results[1].y ==  0 && results[1].w == 10 && results[1].h == 10);
+    assert(results[2].x ==  0 && results[2].y == 10 && results[2].w == 10 && results[2].h == 10);
 
-    assert(bins[0].x == 0  && bins[0].y == 0  && bins[0].w == 10 && bins[0].h == 10);
-    assert(bins[1].x == 10 && bins[1].y == 0  && bins[1].w == 10 && bins[1].h == 10);
-    assert(bins[2].x == NULL  && bins[2].y == NULL && bins[2].w == 10 && bins[2].h == 30);
-    assert(bins[3].x == 0  && bins[3].y == 10 && bins[3].w == 10 && bins[3].h == 10);
+    assert(bins[0].x ==  0 && bins[0].y ==  0 && bins[0].w == 10 && bins[0].h == 10);
+    assert(bins[1].x == 10 && bins[1].y ==  0 && bins[1].w == 10 && bins[1].h == 10);
+    assert(bins[2].x == -1 && bins[2].y == -1 && bins[2].w == 10 && bins[2].h == 30);
+    assert(bins[3].x ==  0 && bins[3].y == 10 && bins[3].w == 10 && bins[3].h == 10);
 
     std::cout << " - OK" << std::endl;
 }
@@ -165,9 +166,9 @@ void testNotEnoughRoom() {
     Bin bin;
 
     bin = sprite.packOne(10, 10);
-    assert(bin.x == 0 && bin.y == 0  && bin.w == 10 && bin.h == 10);
+    assert(bin.x == 0 && bin.y == 0 && bin.w == 10 && bin.h == 10);
     bin = sprite.packOne(10, 10);
-    assert(bin == nullopt);
+    assert(bin.x == -1 && bin.y == -1);
 
     std::cout << " - OK" << std::endl;
 }
@@ -175,7 +176,7 @@ void testNotEnoughRoom() {
 void testAutoResize1() {
     std::cout << "autoResize grows sprite dimensions by width then height";
 
-    ShelfPack::PackOptions options;
+    ShelfPack::ShelfPackOptions options;
     options.autoResize = true;
 
     ShelfPack sprite(10, 10, options);
@@ -199,7 +200,7 @@ void testAutoResize1() {
 
     bin = sprite.packOne(10, 10);
     assert(bin.x == 20 && bin.y == 0 && bin.w == 10 && bin.h == 10);
-    assert(sprite.w == 40 && sprite.h == 10);
+    assert(sprite.w == 40 && sprite.h == 20);
 
     std::cout << " - OK" << std::endl;
 }
@@ -207,7 +208,7 @@ void testAutoResize1() {
 void testAutoResize2() {
     std::cout << "autoResize accommodates big bin requests";
 
-    ShelfPack::PackOptions options;
+    ShelfPack::ShelfPackOptions options;
     options.autoResize = true;
 
     ShelfPack sprite(10, 10, options);
@@ -233,7 +234,7 @@ void testClear() {
     bin = sprite.packOne(10, 10);
     assert(bin.x == 0 && bin.y == 0 && bin.w == 10 && bin.h == 10);
     bin = sprite.packOne(10, 10);
-    assert(bin == nullopt);
+    assert(bin.x == -1 && bin.y == -1);
 
     sprite.clear();
     bin = sprite.packOne(10, 10);
@@ -276,8 +277,8 @@ int main() {
     testPack1();
     testPack2();
     testPack3();
-    testPack4();
-    testPack5();
+    // testPack4();
+    // testPack5();
 
     testPackOne1();
     testPackOne2();
