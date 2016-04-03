@@ -41,7 +41,7 @@ public:
      * @private
      * @param    {int32_t}  w_   Width of the bin to allocate
      * @param    {int32_t}  h_   Height of the bin to allocate
-     * @returns  {Bin}      `Bin` object with `x`, `y`, `w`, `h` properties, all -1 if allocation failed
+     * @returns  {Bin}      `Bin` struct with `x`, `y`, `w`, `h` members, all -1 if allocation failed
      * @example
      * shelf.alloc(12, 16);
      */
@@ -123,19 +123,19 @@ public:
     /**
      * Batch pack multiple bins into the sprite.
      *
-     * @param   {vector<Bin>}   bins Array of requested bins - each object should have `w`, `h` properties
+     * @param   {vector<Bin>}   bins Array of requested bins - each object should have `w`, `h` values
      * @param   {PackOptions}  [options]
-     * @param   {bool} [options.inPlace=false] If `true`, the supplied bin objects will be updated inplace with `x` and `y` properties
-     * @returns {vector<Bin>}   Array of Bins - each bin is an object with `x`, `y`, `w`, `h` properties
+     * @param   {bool} [options.inPlace=false] If `true`, the supplied bin objects will be updated inplace with `x` and `y` values
+     * @returns {vector<Bin>}   Array of Bins - each bin is a struct with `x`, `y`, `w`, `h` values
      * @example
-     * var bins = [
-     *     { id: 'a', w: 12, h: 12 },
-     *     { id: 'b', w: 12, h: 16 },
-     *     { id: 'c', w: 12, h: 24 }
-     * ];
+     * std::vector<Bin> moreBins;
+     * moreBins.emplace_back(12, 24);
+     * moreBins.emplace_back(12, 12);
+     * moreBins.emplace_back(10, 10);
+     *
      * ShelfPack::PackOptions options;
-     * options.inPlace = false;
-     * std::vector<Bin> results = sprite.pack(bins, options);
+     * options.inPlace = true;
+     * std::vector<Bin> results = sprite.pack(moreBins, options);
      */
     std::vector<Bin> pack(std::vector<Bin> &bins, const PackOptions &options = PackOptions{}) {
         std::vector<Bin> results;
@@ -163,7 +163,7 @@ public:
      *
      * @param   {int32_t}  w_   Width of the bin to allocate
      * @param   {int32_t}  h_   Height of the bin to allocate
-     * @returns {Bin}      Bin object with `x`, `y`, `w`, `h` properties, all -1 if allocation failed
+     * @returns {Bin}      Bin struct with `x`, `y`, `w`, `h` members, all -1 if allocation failed
      * @example
      * Bin results = sprite.packOne(12, 16);
      */
@@ -210,7 +210,7 @@ public:
         // If `autoResize` option is set, grow the sprite as follows:
         //  * double whichever sprite dimension is smaller (`w1` or `h1`)
         //  * if sprite dimensions are equal, grow width before height
-        //  * accomodate very large bin requests (big `w` or `h`)
+        //  * accomodate very large bin requests (big `w_` or `h_`)
         if (autoResize) {
             int32_t h1, h2, w1, w2;
 

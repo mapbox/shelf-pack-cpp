@@ -23,77 +23,87 @@ are like this).  It is not a generalized bin packer, and can potentially waste a
 rectangles vary significantly in height.
 
 
-### Usage  (TODO - C++ Examples)
+### Usage
 
 #### Basic
 
-```js
-var ShelfPack = require('shelf-pack');
+```cpp
+#include <shelf-pack.hpp>
+#include <iostream>
 
-// Initialize the sprite with a width and height..
-var sprite = new ShelfPack(64, 64);
+void main(void) {
 
-// Pack bins one at a time..
-for (var i = 0; i < 5; i++) {
-    var bin = sprite.packOne(32, 32);   // request width, height
-    // returns an bin object with `x`, `y`, `w`, `h`, `width`, `height` properties..
+    // Initialize the sprite with a width and height..
+    ShelfPack sprite(64, 64);
 
-    if (bin) {
-        console.log('bin packed at ' + bin.x + ', ' + bin.y);
-    } else {
-        console.log('out of space');
+    // Pack bins one at a time..
+    for (int i = 0; i < 5; i++) {
+        Bin bin = sprite.packOne(10, 10);   // request width, height
+        // `packOne` returns a `Bin` struct with `x`, `y`, `w`, `h` members..
+
+        if (bin.x >=0 && bin.y >= 0) {
+            std::cout << "bin packed at " << bin.x << ", " << bin.y << std::endl;
+        } else {
+            std::cout << "out of space" << std::endl;
+        }
     }
+
+    // Clear sprite and start over..
+    sprite.clear();
+
+    // Or, resize sprite by passing larger dimensions..
+    sprite.resize(128, 128);   // width, height
 }
-
-// Clear sprite and start over..
-sprite.clear();
-
-// Or, resize sprite by passing larger dimensions..
-sprite.resize(128, 128);   // width, height
-
 ```
 
 
 #### Batch packing
 
-```js
-var ShelfPack = require('shelf-pack');
+```cpp
+#include <shelf-pack.hpp>
+#include <iostream>
 
-// If you don't want to think about the size of the sprite,
-// the `autoResize` option will allow it to grow as needed..
-var sprite = new ShelfPack(10, 10, { autoResize: true });
+void main(void) {
 
-// Bins can be allocated in batches..
-// Each bin should have `width`, `height` (or `w`, `h`) properties..
-var bins = [
-    { id: 'a', width: 10, height: 10 },
-    { id: 'b', width: 10, height: 12 },
-    { id: 'c', w: 10, h: 12 },
-    { id: 'd', w: 10, h: 10 }
-];
+    // If you don't want to think about the size of the sprite,
+    // the `autoResize` option will allow it to grow as needed..
+    ShelfPack::ShelfPackOptions options;
+    options.autoResize = true;
+    ShelfPack sprite(10, 10, options);
 
-var results = sprite.pack(bins);
-// returns an Array of packed bins objects with `x`, `y`, `w`, `h`, `width`, `height` properties..
+    // Bins can be allocated in batches..
+    // Each bin should be initialized with `w`, `h` (width, height)..
+    std::vector<Bin> bins;
+    bins.emplace_back(10, 10);
+    bins.emplace_back(10, 12);
+    bins.emplace_back(10, 12);
+    bins.emplace_back(10, 10);
 
-results.forEach(function(bin) {
-    console.log('bin packed at ' + bin.x + ', ' + bin.y);
-});
+    std::vector<Bin> results = sprite.pack(bins);
+    // `pack` returns a vector of packed bin, with `x`, `y`, `w`, `h` values..
+
+    for (const auto& bin : results) {
+        std::cout << "bin packed at " << bin.x << ", " << bin.y << std::endl;
+    }
 
 
-// If you don't mind letting ShelfPack modify your objects,
-// the `inPlace` option will decorate your bin objects with `x` and `y` properties.
-// Fancy!
-var moreBins = [
-    { id: 'e', width: 12, height: 24 },
-    { id: 'f', width: 12, height: 12 },
-    { id: 'g', w: 10, h: 10 }
-];
+    // If you don't mind letting ShelfPack modify your objects,
+    // the `inPlace` option will assign `x` and `y` values to the incoming Bins.
+    // Fancy!
+    std::vector<Bin> moreBins;
+    moreBins.emplace_back(12, 24);
+    moreBins.emplace_back(12, 12);
+    moreBins.emplace_back(10, 10);
 
-sprite.pack(moreBins, { inPlace: true });
-moreBins.forEach(function(bin) {
-    console.log('bin packed at ' + bin.x + ', ' + bin.y);
-});
+    ShelfPack::PackOptions options;
+    options.inPlace = true;
 
+    sprite.pack(moreBins, options);
+    for (const auto& bin_ : moreBins) {
+        std::cout << "bin packed at " << bin_.x << ", " << bin_.y << std::endl;
+    }
+
+}
 
 ```
 
