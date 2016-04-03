@@ -6,7 +6,6 @@
 #include <map>
 #include <vector>
 
-
 namespace mapbox {
 
 struct Bin {
@@ -138,7 +137,7 @@ public:
      * options.inPlace = false;
      * std::vector<Bin> results = sprite.pack(bins, options);
      */
-    std::vector<Bin> pack(std::vector<Bin> bins, const PackOptions &options = PackOptions{}) {
+    std::vector<Bin> pack(std::vector<Bin> &bins, const PackOptions &options = PackOptions{}) {
         std::vector<Bin> results;
 
         for (auto& bin : bins) {

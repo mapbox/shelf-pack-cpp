@@ -277,8 +277,8 @@ int main() {
     testPack1();
     testPack2();
     testPack3();
-    // testPack4();
-    // testPack5();
+    testPack4();
+    testPack5();
 
     testPackOne1();
     testPackOne2();
