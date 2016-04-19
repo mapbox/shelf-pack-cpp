@@ -9,8 +9,20 @@
 namespace mapbox {
 
 struct Bin {
-    inline explicit Bin(int32_t w_ = -1, int32_t h_ = -1, int32_t x_ = -1, int32_t y_ = -1) :
-        w(w_), h(h_), x(x_), y(y_) { };
+    /**
+     * Create a new Bin.
+     *
+     * @private
+     * @class  Shelf
+     * @param  {int32_t}  [w1=-1]   Width of the new Bin
+     * @param  {int32_t}  [h1=-1]   Height of the new Bin
+     * @param  {int32_t}  [x1=-1]   X location of the Bin
+     * @param  {int32_t}  [y1=-1]   Y location of the Bin
+     * @example
+     * Bin b(12, 16, 0, 0);
+     */
+    explicit Bin(int32_t w1 = -1, int32_t h1 = -1, int32_t x1 = -1, int32_t y1 = -1) :
+        w(w1), h(h1), x(x1), y(y1) { }
 
     int32_t w;
     int32_t h;
@@ -26,59 +38,66 @@ public:
      *
      * @private
      * @class  Shelf
-     * @param  {int32_t}  y_   Top coordinate of the new shelf
-     * @param  {int32_t}  w_   Width of the new shelf
-     * @param  {int32_t}  h_   Height of the new shelf
+     * @param  {int32_t}  y   Top coordinate of the new shelf
+     * @param  {int32_t}  w   Width of the new shelf
+     * @param  {int32_t}  h   Height of the new shelf
      * @example
      * Shelf shelf(64, 512, 24);
      */
-    inline explicit Shelf(int32_t y_, int32_t w_, int32_t h_) :
-        x(0), y(y_), w(w_), h(h_), wfree(w_) { };
+    explicit Shelf(int32_t y, int32_t w, int32_t h) :
+        x_(0), y_(y), w_(w), h_(h), wfree_(w) { }
 
     /**
      * Allocate a single bin into the shelf.
      *
      * @private
-     * @param    {int32_t}  w_   Width of the bin to allocate
-     * @param    {int32_t}  h_   Height of the bin to allocate
+     * @param    {int32_t}  w   Width of the bin to allocate
+     * @param    {int32_t}  h   Height of the bin to allocate
      * @returns  {Bin}      `Bin` struct with `x`, `y`, `w`, `h` members, all -1 if allocation failed
      * @example
      * shelf.alloc(12, 16);
      */
-    Bin alloc(int32_t w_, int32_t h_) {
-        if (w_ > wfree || h_ > h) {
+    Bin alloc(int32_t w, int32_t h) {
+        if (w > wfree_ || h > h_) {
             return Bin();
         }
-        int32_t x_ = x;
-        x += w_;
-        wfree -= w_;
-        return Bin(w_, h_, x_, y);
-    };
+        int32_t x = x_;
+        x_ += w;
+        wfree_ -= w;
+        return Bin(w, h, x, y_);
+    }
 
     /**
      * Resize the shelf.
      * The resize will fail if the requested width is smaller than the current shelf width.
      *
      * @private
-     * @param    {int32_t}  w_  Requested new width of the shelf
+     * @param    {int32_t}  w  Requested new width of the shelf
      * @returns  {bool}     `true` if resize succeeded, `false` if failed
      * @example
      * shelf.resize(512);
      */
-    bool resize(int32_t w_) {
-        if (w_ < w) {
+    bool resize(int32_t w) {
+        if (w < w_) {
             return false;
         }
-        wfree += (w_ - w);
-        w = w_;
+        wfree_ += (w - w_);
+        w_ = w;
         return true;
-    };
+    }
 
-    int32_t x;
-    int32_t y;
-    int32_t w;
-    int32_t h;
-    int32_t wfree;
+    int32_t x() { return x_; }
+    int32_t y() { return y_; }
+    int32_t w() { return w_; }
+    int32_t h() { return h_; }
+    int32_t wfree() { return wfree_; }
+
+private:
+    int32_t x_;
+    int32_t y_;
+    int32_t w_;
+    int32_t h_;
+    int32_t wfree_;
 };
 
 
@@ -95,6 +114,7 @@ public:
         bool inPlace;
     };
 
+
     /**
      * Create a new ShelfPack bin allocator.
      *
@@ -102,8 +122,8 @@ public:
      * http://clb.demon.fi/files/RectangleBinPack.pdf
      *
      * @class  ShelfPack
-     * @param  {int32_t}  [w_=64]  Initial width of the sprite
-     * @param  {int32_t}  [h_=64]  Initial width of the sprite
+     * @param  {int32_t}  [w=64]  Initial width of the sprite
+     * @param  {int32_t}  [h=64]  Initial width of the sprite
      * @param  {ShelfPackOptions}  [options]
      * @param  {bool} [options.autoResize=false]  If `true`, the sprite will automatically grow
      * @example
@@ -111,13 +131,11 @@ public:
      * options.autoResize = false;
      * ShelfPack sprite = new ShelfPack(64, 64, options);
      */
-    ShelfPack(int32_t w_ = 0, int32_t h_ = 0, const ShelfPackOptions &options = ShelfPackOptions{}) {
-        w = w_ > 0 ? w_ : 64;
-        h = h_ > 0 ? h_ : 64;
-        autoResize = options.autoResize;
-    };
-
-    ~ShelfPack() { };
+    explicit ShelfPack(int32_t w = 0, int32_t h = 0, const ShelfPackOptions &options = ShelfPackOptions{}) {
+        width_ = w > 0 ? w : 64;
+        height_ = h > 0 ? h : 64;
+        autoResize_ = options.autoResize;
+    }
 
 
     /**
@@ -155,38 +173,38 @@ public:
         }
 
         return results;
-    };
+    }
 
 
     /**
      * Pack a single bin into the sprite.
      *
-     * @param   {int32_t}  w_   Width of the bin to allocate
-     * @param   {int32_t}  h_   Height of the bin to allocate
+     * @param   {int32_t}  w   Width of the bin to allocate
+     * @param   {int32_t}  h   Height of the bin to allocate
      * @returns {Bin}      Bin struct with `x`, `y`, `w`, `h` members, all -1 if allocation failed
      * @example
      * Bin results = sprite.packOne(12, 16);
      */
-    Bin packOne(int32_t w_, int32_t h_) {
-        int32_t y_ = 0;
+    Bin packOne(int32_t w, int32_t h) {
+        int32_t y = 0;
         struct { Shelf* pshelf = NULL; int32_t waste = INT32_MAX; } best;
 
         // find the best shelf
-        for (auto& shelf : shelves) {
-            y_ += shelf.h;
+        for (auto& shelf : shelves_) {
+            y += shelf.h();
 
             // exactly the right height with width to spare, pack it..
-            if (h_ == shelf.h && w_ <= shelf.wfree) {
-                count(h_);
-                return shelf.alloc(w_, h_);
+            if (h == shelf.h() && w <= shelf.wfree()) {
+                count(h);
+                return shelf.alloc(w, h);
             }
             // not enough height or width, skip it..
-            if (h_ > shelf.h || w_ > shelf.wfree) {
+            if (h > shelf.h() || w > shelf.wfree()) {
                 continue;
             }
             // maybe enough height or width, minimize waste..
-            if (h_ < shelf.h && w_ <= shelf.wfree) {
-                int32_t waste = shelf.h - h_;
+            if (h < shelf.h() && w <= shelf.wfree()) {
+                int32_t waste = shelf.h() - h;
                 if (waste < best.waste) {
                     best.waste = waste;
                     best.pshelf = &shelf;
@@ -195,41 +213,42 @@ public:
         }
 
         if (best.pshelf) {
-            count(h_);
-            return best.pshelf->alloc(w_, h_);
+            count(h);
+            return best.pshelf->alloc(w, h);
         }
 
         // add shelf..
-        if (h_ <= (h - y_) && w_ <= w) {
-            count(h_);
-            shelves.emplace_back(y_, w, h_);
-            return shelves.back().alloc(w_, h_);
+        if (h <= (height_ - y) && w <= width_) {
+            count(h);
+            shelves_.emplace_back(y, width_, h);
+            return shelves_.back().alloc(w, h);
         }
 
         // no more space..
         // If `autoResize` option is set, grow the sprite as follows:
         //  * double whichever sprite dimension is smaller (`w1` or `h1`)
         //  * if sprite dimensions are equal, grow width before height
-        //  * accomodate very large bin requests (big `w_` or `h_`)
-        if (autoResize) {
+        //  * accomodate very large bin requests (big `w` or `h`)
+        if (autoResize_) {
             int32_t h1, h2, w1, w2;
 
-            h1 = h2 = h;
-            w1 = w2 = w;
+            h1 = h2 = height_;
+            w1 = w2 = width_;
 
-            if (w1 <= h1 || w_ > w1) {   // grow width..
-                w2 = std::max(w_, w1) * 2;
+            if (w1 <= h1 || w > w1) {   // grow width..
+                w2 = std::max(w, w1) * 2;
             }
-            if (h1 < w1 || h_ > h1) {    // grow height..
-                h2 = std::max(h_, h1) * 2;
+            if (h1 < w1 || h > h1) {    // grow height..
+                h2 = std::max(h, h1) * 2;
             }
 
             resize(w2, h2);
-            return packOne(w_, h_);  // retry
+            return packOne(w, h);  // retry
         }
 
         return Bin();
-    };
+    }
+
 
     /**
      * Clear the sprite.
@@ -238,45 +257,69 @@ public:
      * sprite.clear();
      */
     void clear() {
-        shelves.clear();
-        stats.clear();
-    };
+        shelves_.clear();
+        stats_.clear();
+    }
+
 
     /**
      * Resize the sprite.
      * The resize will fail if the requested dimensions are smaller than the current sprite dimensions.
      *
-     * @param   {int32_t}  w_  Requested new sprite width
-     * @param   {int32_t}  h_  Requested new sprite height
+     * @param   {int32_t}  w  Requested new sprite width
+     * @param   {int32_t}  h  Requested new sprite height
      * @returns {bool}     `true` if resize succeeded, `false` if failed
      * @example
      * sprite.resize(256, 256);
      */
-    bool resize(int32_t w_, int32_t h_) {
-        if (w_ < w || h_ < h) {
+    bool resize(int32_t w, int32_t h) {
+        if (w < width_ || h < height_) {
             return false;
         }
 
-        w = w_;
-        h = h_;
-        for (auto& shelf : shelves) {
-            shelf.resize(w);
+        width_ = w;
+        height_ = h;
+        for (auto& shelf : shelves_) {
+            shelf.resize(width_);
         }
         return true;
-    };
+    }
 
 
-    int32_t w;
-    int32_t h;
+    /**
+     * Get the current width of the sprite
+     *
+     * @returns {int32_t} the current width of the sprite
+     * @example
+     * int32_t w = sprite.width();
+     */
+    int32_t width() {
+        return width_;
+    }
+
+
+    /**
+     * Get the current height of the sprite
+     *
+     * @returns {int32_t} the current height of the sprite
+     * @example
+     * int32_t h = sprite.height();
+     */
+    int32_t height() {
+        return height_;
+    }
+
 
 private:
-    void count(int32_t h_) {
-       stats[h_]++;
-    };
+    void count(int32_t h) {
+       stats_[h]++;
+    }
 
-    bool autoResize;
-    std::vector<Shelf> shelves;
-    std::map<int32_t, int32_t> stats;
+    int32_t width_;
+    int32_t height_;
+    bool autoResize_;
+    std::vector<Shelf> shelves_;
+    std::map<int32_t, int32_t> stats_;
 };
 
 

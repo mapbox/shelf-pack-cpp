@@ -184,23 +184,23 @@ void testAutoResize1() {
 
     bin = sprite.packOne(10, 10);
     assert(bin.x == 0 && bin.y == 0 && bin.w == 10 && bin.h == 10);
-    assert(sprite.w == 10 && sprite.h == 10);
+    assert(sprite.width() == 10 && sprite.height() == 10);
 
     bin = sprite.packOne(10, 10);
     assert(bin.x == 10 && bin.y == 0 && bin.w == 10 && bin.h == 10);
-    assert(sprite.w == 20 && sprite.h == 10);
+    assert(sprite.width() == 20 && sprite.height() == 10);
 
     bin = sprite.packOne(10, 10);
     assert(bin.x == 0 && bin.y == 10 && bin.w == 10 && bin.h == 10);
-    assert(sprite.w == 20 && sprite.h == 20);
+    assert(sprite.width() == 20 && sprite.height() == 20);
 
     bin = sprite.packOne(10, 10);
     assert(bin.x == 10 && bin.y == 10 && bin.w == 10 && bin.h == 10);
-    assert(sprite.w == 20 && sprite.h == 20);
+    assert(sprite.width() == 20 && sprite.height() == 20);
 
     bin = sprite.packOne(10, 10);
     assert(bin.x == 20 && bin.y == 0 && bin.w == 10 && bin.h == 10);
-    assert(sprite.w == 40 && sprite.h == 20);
+    assert(sprite.width() == 40 && sprite.height() == 20);
 
     std::cout << " - OK" << std::endl;
 }
@@ -216,11 +216,11 @@ void testAutoResize2() {
 
     bin = sprite.packOne(20, 10);
     assert(bin.x == 0 && bin.y == 0 && bin.w == 20 && bin.h == 10);
-    assert(sprite.w == 40 && sprite.h == 10);
+    assert(sprite.width() == 40 && sprite.height() == 10);
 
     bin = sprite.packOne(10, 40);
     assert(bin.x == 0 && bin.y == 10 && bin.w == 10 && bin.h == 40);
-    assert(sprite.w == 40 && sprite.h == 80);
+    assert(sprite.width() == 40 && sprite.height() == 80);
 
     std::cout << " - OK" << std::endl;
 }
