@@ -1,9 +1,9 @@
 {
   'target_defaults': {
     'default_configuration': 'Release',
-    'cflags_cc': [ '-std=c++14', '-Wall', '-Wextra', '-Wshadow', '-fno-rtti', '-fexceptions' ],
+    'cflags_cc': [ '-std=c++1y', '-Wall', '-Wextra', '-Wshadow', '-fno-rtti', '-fexceptions' ],
     'xcode_settings': {
-      'CLANG_CXX_LANGUAGE_STANDARD':'c++14',
+      'CLANG_CXX_LANGUAGE_STANDARD':'c++1y',
       'MACOSX_DEPLOYMENT_TARGET': '10.7',
       'CLANG_CXX_LIBRARY': 'libc++',
       'OTHER_CPLUSPLUSFLAGS': [ '-Wall', '-Wextra', '-Wshadow', '-fno-rtti', '-fexceptions' ],
