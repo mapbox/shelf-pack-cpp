@@ -4,9 +4,10 @@ machine:
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.6 10
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.9 20
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.9 20
+    - sudo apt-get remove clang
+    - sudo apt-get install clang-3.4 libclang-common-3.4-dev libllvm3.4=1:3.4-1ubuntu3~precise2
 
 test:
-  pre:
-    - export CXX="g++-4.9" CC="gcc-4.9"
   override:
-    - make
+    - ci.sh
+        parallel: true
