@@ -1,12 +1,19 @@
 #ifndef SHELF_PACK_HPP
 #define SHELF_PACK_HPP
 
+#include <experimental/optional>
 #include <algorithm>
 #include <cstdint>
 #include <map>
 #include <vector>
 
 namespace mapbox {
+
+template <typename T>
+using optional = std::experimental::optional<T>;
+
+using std::experimental::nullopt;
+
 
 struct Bin {
     /**
@@ -51,15 +58,15 @@ public:
      * Allocate a single bin into the shelf.
      *
      * @private
-     * @param    {int32_t}  w   Width of the bin to allocate
-     * @param    {int32_t}  h   Height of the bin to allocate
-     * @returns  {Bin}      `Bin` struct with `x`, `y`, `w`, `h` members, all -1 if allocation failed
+     * @param    {int32_t}  w     Width of the bin to allocate
+     * @param    {int32_t}  h     Height of the bin to allocate
+     * @returns  {optional<Bin>}  `Bin` struct with `x`, `y`, `w`, `h` members
      * @example
-     * shelf.alloc(12, 16);
+     * optional<Bin> result = shelf.alloc(12, 16);
      */
-    Bin alloc(int32_t w, int32_t h) {
+    optional<Bin> alloc(int32_t w, int32_t h) {
         if (w > wfree_ || h > h_) {
-            return Bin();
+            return nullopt;
         }
         int32_t x = x_;
         x_ += w;
@@ -160,15 +167,15 @@ public:
 
         for (auto& bin : bins) {
             if (bin.w && bin.h) {
-                Bin allocation = packOne(bin.w, bin.h);
-                if (allocation.x < 0 || allocation.y < 0) {
+                optional<Bin> allocation = packOne(bin.w, bin.h);
+                if (!allocation) {
                     continue;
                 }
                 if (options.inPlace) {
-                    bin.x = allocation.x;
-                    bin.y = allocation.y;
+                    bin.x = allocation->x;
+                    bin.y = allocation->y;
                 }
-                results.push_back(allocation);
+                results.push_back(*allocation);
             }
         }
 
@@ -179,13 +186,13 @@ public:
     /**
      * Pack a single bin into the sprite.
      *
-     * @param   {int32_t}  w   Width of the bin to allocate
-     * @param   {int32_t}  h   Height of the bin to allocate
-     * @returns {Bin}      Bin struct with `x`, `y`, `w`, `h` members, all -1 if allocation failed
+     * @param   {int32_t}  w     Width of the bin to allocate
+     * @param   {int32_t}  h     Height of the bin to allocate
+     * @returns {optional<Bin>}  Bin struct with `x`, `y`, `w`, `h` members
      * @example
-     * Bin results = sprite.packOne(12, 16);
+     * optional<Bin> result = sprite.packOne(12, 16);
      */
-    Bin packOne(int32_t w, int32_t h) {
+    optional<Bin> packOne(int32_t w, int32_t h) {
         int32_t y = 0;
         struct { Shelf* pshelf = NULL; int32_t waste = INT32_MAX; } best;
 
@@ -246,7 +253,7 @@ public:
             return packOne(w, h);  // retry
         }
 
-        return Bin();
+        return nullopt;
     }
 
 
@@ -285,30 +292,8 @@ public:
         return true;
     }
 
-
-    /**
-     * Get the current width of the sprite
-     *
-     * @returns {int32_t} the current width of the sprite
-     * @example
-     * int32_t w = sprite.width();
-     */
-    int32_t width() {
-        return width_;
-    }
-
-
-    /**
-     * Get the current height of the sprite
-     *
-     * @returns {int32_t} the current height of the sprite
-     * @example
-     * int32_t h = sprite.height();
-     */
-    int32_t height() {
-        return height_;
-    }
-
+    int32_t width() { return width_; }
+    int32_t height() { return height_; }
 
 private:
     void count(int32_t h) {
