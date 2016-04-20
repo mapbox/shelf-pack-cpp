@@ -9,5 +9,6 @@ case $CIRCLE_NODE_INDEX in
     ;;
 esac
 
+echo "CXX=$CXX"
 make clean
 make
