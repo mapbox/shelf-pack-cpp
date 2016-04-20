@@ -9,5 +9,5 @@ machine:
 
 test:
   override:
-    - ci.sh:
+    - ./ci.sh:
         parallel: true
