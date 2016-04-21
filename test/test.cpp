@@ -5,6 +5,13 @@
 
 using namespace mapbox;
 
+void testVersion() {
+    std::cout << "has a version";
+    std::string version(SHELF_PACK_VERSION);
+    assert(version.length());
+    std::cout << " - " << version << " - OK" << std::endl;
+}
+
 void testPack1() {
     std::cout << "batch pack allocates same height bins on existing shelf";
 
@@ -274,6 +281,8 @@ void testResizeSmaller() {
 }
 
 int main() {
+    testVersion();
+
     testPack1();
     testPack2();
     testPack3();

@@ -31,6 +31,8 @@ rectangles vary significantly in height.
 #include <shelf-pack.hpp>
 #include <iostream>
 
+using namespace mapbox;
+
 void main(void) {
 
     // Initialize the sprite with a width and height..
@@ -38,11 +40,11 @@ void main(void) {
 
     // Pack bins one at a time..
     for (int i = 0; i < 5; i++) {
-        Bin bin = sprite.packOne(10, 10);   // request width, height
-        // `packOne` returns a `Bin` struct with `x`, `y`, `w`, `h` members..
+        optional<Bin> bin = sprite.packOne(10, 10);   // request width, height
+        // `packOne` returns an `Bin` struct with `x`, `y`, `w`, `h` members..
 
-        if (bin.x >=0 && bin.y >= 0) {
-            std::cout << "bin packed at " << bin.x << ", " << bin.y << std::endl;
+        if (bin) {
+            std::cout << "bin packed at " << bin->x << ", " << bin->y << std::endl;
         } else {
             std::cout << "out of space" << std::endl;
         }

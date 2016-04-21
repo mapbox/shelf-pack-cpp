@@ -11,8 +11,9 @@ namespace mapbox {
 
 template <typename T>
 using optional = std::experimental::optional<T>;
-
 using std::experimental::nullopt;
+
+const char * const SHELF_PACK_VERSION = "1.0.0";
 
 
 struct Bin {
