@@ -90,11 +90,11 @@ public:
         return true;
     }
 
-    int32_t x() { return x_; }
-    int32_t y() { return y_; }
-    int32_t w() { return w_; }
-    int32_t h() { return h_; }
-    int32_t wfree() { return wfree_; }
+    int32_t x() const { return x_; }
+    int32_t y() const { return y_; }
+    int32_t w() const { return w_; }
+    int32_t h() const { return h_; }
+    int32_t wfree() const { return wfree_; }
 
 private:
     int32_t x_;
