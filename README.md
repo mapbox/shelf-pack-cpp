@@ -1,4 +1,4 @@
-[![Build Status](https://circleci.com/gh/mapbox/shelf-pack-cpp.svg?style=svg)](https://circleci.com/gh/mapbox/shelf-pack-cpp)
+[![Build Status](https://circleci.com/gh/mapbox/shelf-pack-cpp.svg?style=shield)](https://circleci.com/gh/mapbox/shelf-pack-cpp)
 
 ## shelf-pack-cpp
 
