@@ -293,8 +293,8 @@ public:
         return true;
     }
 
-    int32_t width() { return width_; }
-    int32_t height() { return height_; }
+    int32_t width() const { return width_; }
+    int32_t height() const { return height_; }
 
 private:
     void count(int32_t h) {
