@@ -77,7 +77,6 @@ public:
 
     /**
      * Resize the shelf.
-     * The resize will fail if the requested width is smaller than the current shelf width.
      *
      * @private
      * @param    {int32_t}  w  Requested new width of the shelf
@@ -86,9 +85,6 @@ public:
      * shelf.resize(512);
      */
     bool resize(int32_t w) {
-        if (w < w_) {
-            return false;
-        }
         wfree_ += (w - w_);
         w_ = w;
         return true;
@@ -178,6 +174,22 @@ public:
                 }
                 results.push_back(*allocation);
             }
+        }
+
+        // Shrink the width/height of the sprite to the bare minimum.
+        // Since shelf-pack doubles first width, then height when running out of shelf space
+        // this can result in fairly large unused space both in width and height if that happens
+        // towards the end of bin packing.
+        if (shelves_.size()) {
+            int32_t w2 = 0;
+            int32_t h2 = 0;
+
+            for (auto& shelf : shelves_) {
+                h2 += shelf.h();
+                w2 = std::max(shelf.w() - shelf.wfree(), w2);
+            }
+
+            resize(w2, h2);
         }
 
         return results;
@@ -272,7 +284,6 @@ public:
 
     /**
      * Resize the sprite.
-     * The resize will fail if the requested dimensions are smaller than the current sprite dimensions.
      *
      * @param   {int32_t}  w  Requested new sprite width
      * @param   {int32_t}  h  Requested new sprite height
@@ -281,10 +292,6 @@ public:
      * sprite.resize(256, 256);
      */
     bool resize(int32_t w, int32_t h) {
-        if (w < width_ || h < height_) {
-            return false;
-        }
-
         width_ = w;
         height_ = h;
         for (auto& shelf : shelves_) {
