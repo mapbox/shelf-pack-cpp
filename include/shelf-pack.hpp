@@ -17,25 +17,38 @@ const char * const SHELF_PACK_VERSION = "1.0.0";
 
 
 struct Bin {
+public:
     /**
      * Create a new Bin.
      *
      * @private
      * @class  Shelf
+     * @param  {int32_t}  [id=-1]   Unique bin identifier, generated if not provided
      * @param  {int32_t}  [w1=-1]   Width of the new Bin
      * @param  {int32_t}  [h1=-1]   Height of the new Bin
      * @param  {int32_t}  [x1=-1]   X location of the Bin
      * @param  {int32_t}  [y1=-1]   Y location of the Bin
      * @example
-     * Bin b(12, 16, 0, 0);
+     * Bin b(-1, 12, 16, 0, 0);
      */
-    explicit Bin(int32_t w1 = -1, int32_t h1 = -1, int32_t x1 = -1, int32_t y1 = -1) :
-        w(w1), h(h1), x(x1), y(y1) { }
+    explicit Bin(int32_t id1 = -1, int32_t w1 = -1, int32_t h1 = -1, int32_t x1 = -1, int32_t y1 = -1) :
+        id(id1), w(w1), h(h1), x(x1), y(y1) {
+        if (id == -1) {
+            id = getId();
+        }
+    }
 
+    int32_t id;
     int32_t w;
     int32_t h;
     int32_t x;
     int32_t y;
+
+private:
+    int32_t getId() {
+        static std::atomic<std::int32_t> next { 0 };
+        return ++next;
+    };
 };
 
 
@@ -59,20 +72,21 @@ public:
      * Allocate a single bin into the shelf.
      *
      * @private
+     * @param    {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
      * @param    {int32_t}  w     Width of the bin to allocate
      * @param    {int32_t}  h     Height of the bin to allocate
-     * @returns  {optional<Bin>}  `Bin` struct with `x`, `y`, `w`, `h` members
+     * @returns  {optional<Bin>}  `Bin` struct with `id`, `x`, `y`, `w`, `h` members
      * @example
-     * optional<Bin> result = shelf.alloc(12, 16);
+     * optional<Bin> result = shelf.alloc(-1, 12, 16);
      */
-    optional<Bin> alloc(int32_t w, int32_t h) {
+    optional<Bin> alloc(int32_t id, int32_t w, int32_t h) {
         if (w > wfree_ || h > h_) {
             return nullopt;
         }
         int32_t x = x_;
         x_ += w;
         wfree_ -= w;
-        return Bin(w, h, x, y_);
+        return Bin(id, w, h, x, y_);
     }
 
     /**
@@ -151,9 +165,9 @@ public:
      * @returns {vector<Bin>}   Array of Bins - each bin is a struct with `x`, `y`, `w`, `h` values
      * @example
      * std::vector<Bin> moreBins;
-     * moreBins.emplace_back(12, 24);
-     * moreBins.emplace_back(12, 12);
-     * moreBins.emplace_back(10, 10);
+     * moreBins.emplace_back(-1, 12, 24);
+     * moreBins.emplace_back(-1, 12, 12);
+     * moreBins.emplace_back(-1, 10, 10);
      *
      * ShelfPack::PackOptions options;
      * options.inPlace = true;
@@ -164,7 +178,7 @@ public:
 
         for (auto& bin : bins) {
             if (bin.w && bin.h) {
-                optional<Bin> allocation = packOne(bin.w, bin.h);
+                optional<Bin> allocation = packOne(bin.id, bin.w, bin.h);
                 if (!allocation) {
                     continue;
                 }
@@ -199,13 +213,14 @@ public:
     /**
      * Pack a single bin into the sprite.
      *
+     * @param   {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
      * @param   {int32_t}  w     Width of the bin to allocate
      * @param   {int32_t}  h     Height of the bin to allocate
-     * @returns {optional<Bin>}  Bin struct with `x`, `y`, `w`, `h` members
+     * @returns {optional<Bin>}  Bin struct with `id`, `x`, `y`, `w`, `h` members
      * @example
-     * optional<Bin> result = sprite.packOne(12, 16);
+     * optional<Bin> result = sprite.packOne(-1, 12, 16);
      */
-    optional<Bin> packOne(int32_t w, int32_t h) {
+    optional<Bin> packOne(int32_t id, int32_t w, int32_t h) {
         int32_t y = 0;
         struct { Shelf* pshelf = NULL; int32_t waste = INT32_MAX; } best;
 
@@ -216,7 +231,7 @@ public:
             // exactly the right height with width to spare, pack it..
             if (h == shelf.h() && w <= shelf.wfree()) {
                 count(h);
-                return shelf.alloc(w, h);
+                return shelf.alloc(id, w, h);
             }
             // not enough height or width, skip it..
             if (h > shelf.h() || w > shelf.wfree()) {
@@ -234,14 +249,14 @@ public:
 
         if (best.pshelf) {
             count(h);
-            return best.pshelf->alloc(w, h);
+            return best.pshelf->alloc(id, w, h);
         }
 
         // add shelf..
         if (h <= (height_ - y) && w <= width_) {
             count(h);
             shelves_.emplace_back(y, width_, h);
-            return shelves_.back().alloc(w, h);
+            return shelves_.back().alloc(id, w, h);
         }
 
         // no more space..
@@ -263,7 +278,7 @@ public:
             }
 
             resize(w2, h2);
-            return packOne(w, h);  // retry
+            return packOne(id, w, h);  // retry
         }
 
         return nullopt;

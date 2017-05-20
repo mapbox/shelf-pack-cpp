@@ -18,9 +18,9 @@ void testPack1() {
     ShelfPack sprite(64, 64);
     std::vector<Bin> bins, results;
 
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 10);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 10);
     results = sprite.pack(bins);
 
     assert(results[0].x ==  0 && results[0].y == 0 && results[0].w == 10 && results[0].h == 10);
@@ -36,9 +36,9 @@ void testPack2() {
     ShelfPack sprite(64, 64);
     std::vector<Bin> bins, results;
 
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 15);
-    bins.emplace_back(10, 20);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 15);
+    bins.emplace_back(-1, 10, 20);
     results = sprite.pack(bins);
 
     assert(results[0].x == 0 && results[0].y ==  0 && results[0].w == 10 && results[0].h == 10);
@@ -54,10 +54,10 @@ void testPack3() {
     ShelfPack sprite(64, 64);
     std::vector<Bin> bins, results;
 
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 15);
-    bins.emplace_back(10, 20);
-    bins.emplace_back(10,  9);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 15);
+    bins.emplace_back(-1, 10, 20);
+    bins.emplace_back(-1, 10,  9);
     results = sprite.pack(bins);
 
     assert(results[0].x ==  0 && results[0].y ==  0 && results[0].w == 10 && results[0].h == 10);
@@ -77,9 +77,9 @@ void testPack4() {
     ShelfPack::PackOptions options;
     options.inPlace = true;
 
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 10);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 10);
     sprite.pack(bins, options);
 
     assert(bins[0].x ==  0 && bins[0].y == 0 && bins[0].w == 10 && bins[0].h == 10);
@@ -98,10 +98,10 @@ void testPack5() {
     ShelfPack::PackOptions options;
     options.inPlace = true;
 
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 30);   // should skip
-    bins.emplace_back(10, 10);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 30);   // should skip
+    bins.emplace_back(-1, 10, 10);
     results = sprite.pack(bins, options);
 
     assert(results[0].x ==  0 && results[0].y ==  0 && results[0].w == 10 && results[0].h == 10);
@@ -120,10 +120,10 @@ void testMinimalSize() {
     std::cout << "sprite shrinks to minimal size after batch packing";
 
     std::vector<Bin> bins, results;
-    bins.emplace_back(10, 10);
-    bins.emplace_back(5,  15);
-    bins.emplace_back(25, 15);
-    bins.emplace_back(10, 20);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 5,  15);
+    bins.emplace_back(-1, 25, 15);
+    bins.emplace_back(-1, 10, 20);
 
     ShelfPack::ShelfPackOptions options;
     options.autoResize = true;
@@ -131,9 +131,9 @@ void testMinimalSize() {
     ShelfPack sprite(10, 10, options);
     results = sprite.pack(bins);
 
-    assert(results[0].x ==  0 && results[0].y ==  0 && results[0].w == 10 && results[0].h == 10);
-    assert(results[1].x ==  0 && results[1].y == 10 && results[1].w == 5  && results[1].h == 15);
-    assert(results[2].x ==  5 && results[2].y == 10 && results[2].w == 25 && results[2].h == 15);
+    assert(results[0].x == 0 && results[0].y ==  0 && results[0].w == 10 && results[0].h == 10);
+    assert(results[1].x == 0 && results[1].y == 10 && results[1].w == 5  && results[1].h == 15);
+    assert(results[2].x == 5 && results[2].y == 10 && results[2].w == 25 && results[2].h == 15);
     assert(results[3].x == 0 && results[3].y == 25 && results[3].w == 10 && results[3].h == 20);
 
     // Since shelf-pack doubles width/height when packing bins one by one
@@ -151,11 +151,11 @@ void testPackOne1() {
     ShelfPack sprite(64, 64);
     optional<Bin> bin;
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0  && bin->y == 0 && bin->w == 10 && bin->h == 10);
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 10 && bin->y == 0 && bin->w == 10 && bin->h == 10);
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 20 && bin->y == 0 && bin->w == 10 && bin->h == 10);
 
     std::cout << " - OK" << std::endl;
@@ -167,11 +167,11 @@ void testPackOne2() {
     ShelfPack sprite(64, 64);
     optional<Bin> bin;
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 0  && bin->w == 10 && bin->h == 10);
-    bin = sprite.packOne(10, 15);
+    bin = sprite.packOne(-1, 10, 15);
     assert(bin && bin->x == 0 && bin->y == 10 && bin->w == 10 && bin->h == 15);
-    bin = sprite.packOne(10, 20);
+    bin = sprite.packOne(-1, 10, 20);
     assert(bin && bin->x == 0 && bin->y == 25 && bin->w == 10 && bin->h == 20);
 
     std::cout << " - OK" << std::endl;
@@ -183,13 +183,13 @@ void testPackOne3() {
     ShelfPack sprite(64, 64);
     optional<Bin> bin;
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 0  && bin->w == 10 && bin->h == 10);
-    bin = sprite.packOne(10, 15);
+    bin = sprite.packOne(-1, 10, 15);
     assert(bin && bin->x == 0 && bin->y == 10 && bin->w == 10 && bin->h == 15);
-    bin = sprite.packOne(10, 20);
+    bin = sprite.packOne(-1, 10, 20);
     assert(bin && bin->x == 0 && bin->y == 25 && bin->w == 10 && bin->h == 20);
-    bin = sprite.packOne(10, 9);
+    bin = sprite.packOne(-1, 10, 9);
     assert(bin && bin->x == 10 && bin->y == 0 && bin->w == 10 && bin->h == 9);
 
     std::cout << " - OK" << std::endl;
@@ -201,9 +201,9 @@ void testNotEnoughRoom() {
     ShelfPack sprite(10, 10);
     optional<Bin> bin;
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 0 && bin->w == 10 && bin->h == 10);
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(!bin);
 
     std::cout << " - OK" << std::endl;
@@ -218,23 +218,23 @@ void testAutoResize1() {
     ShelfPack sprite(10, 10, options);
     optional<Bin> bin;
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 0 && bin->w == 10 && bin->h == 10);
     assert(sprite.width() == 10 && sprite.height() == 10);
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 10 && bin->y == 0 && bin->w == 10 && bin->h == 10);
     assert(sprite.width() == 20 && sprite.height() == 10);
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 10 && bin->w == 10 && bin->h == 10);
     assert(sprite.width() == 20 && sprite.height() == 20);
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 10 && bin->y == 10 && bin->w == 10 && bin->h == 10);
     assert(sprite.width() == 20 && sprite.height() == 20);
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 20 && bin->y == 0 && bin->w == 10 && bin->h == 10);
     assert(sprite.width() == 40 && sprite.height() == 20);
 
@@ -250,11 +250,11 @@ void testAutoResize2() {
     ShelfPack sprite(10, 10, options);
     optional<Bin> bin;
 
-    bin = sprite.packOne(20, 10);
+    bin = sprite.packOne(-1, 20, 10);
     assert(bin && bin->x == 0 && bin->y == 0 && bin->w == 20 && bin->h == 10);
     assert(sprite.width() == 40 && sprite.height() == 10);
 
-    bin = sprite.packOne(10, 40);
+    bin = sprite.packOne(-1, 10, 40);
     assert(bin && bin->x == 0 && bin->y == 10 && bin->w == 10 && bin->h == 40);
     assert(sprite.width() == 40 && sprite.height() == 80);
 
@@ -267,13 +267,13 @@ void testClear() {
     ShelfPack sprite(10, 10);
     optional<Bin> bin;
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 0 && bin->w == 10 && bin->h == 10);
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(!bin);
 
     sprite.clear();
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 0 && bin->w == 10 && bin->h == 10);
 
     std::cout << " - OK" << std::endl;
@@ -285,15 +285,15 @@ void testResizeLarger() {
     ShelfPack sprite(10, 10);
     optional<Bin> bin;
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 0 && bin->w == 10 && bin->h == 10);
     assert(sprite.resize(20, 10) == true);   // grow width
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 10 && bin->y == 0 && bin->w == 10 && bin->h == 10);
     assert(sprite.resize(20, 20) == true);   // grow height
 
-    bin = sprite.packOne(10, 10);
+    bin = sprite.packOne(-1, 10, 10);
     assert(bin && bin->x == 0 && bin->y == 10 && bin->w == 10 && bin->h == 10);
 
     std::cout << " - OK" << std::endl;
