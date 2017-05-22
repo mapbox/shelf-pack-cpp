@@ -16,25 +16,42 @@ using std::experimental::nullopt;
 const char * const SHELF_PACK_VERSION = "1.0.0";
 
 
+
 struct Bin {
+    friend class ShelfPack;
+
 public:
     /**
      * Create a new Bin.
      *
      * @private
      * @class  Shelf
-     * @param  {int32_t}  [id=-1]   Unique bin identifier, generated if not provided
+     * @param  {int32_t}  id        Unique bin identifier
      * @param  {int32_t}  [w1=-1]   Width of the new Bin
      * @param  {int32_t}  [h1=-1]   Height of the new Bin
      * @param  {int32_t}  [x1=-1]   X location of the Bin
      * @param  {int32_t}  [y1=-1]   Y location of the Bin
+     * @param  {int32_t}  [maxw1=-1]   Maximum Width of the new Bin
+     * @param  {int32_t}  [maxh1=-1]   Maximum Height of the new Bin
+     *
      * @example
      * Bin b(-1, 12, 16, 0, 0);
      */
-    explicit Bin(int32_t id1 = -1, int32_t w1 = -1, int32_t h1 = -1, int32_t x1 = -1, int32_t y1 = -1) :
-        id(id1), w(w1), h(h1), x(x1), y(y1) {
-        if (id == -1) {
-            id = getId();
+    explicit Bin(
+            int32_t id1 = -1,
+            int32_t w1 = -1,
+            int32_t h1 = -1,
+            int32_t x1 = -1,
+            int32_t y1 = -1,
+            int32_t maxw1 = -1,
+            int32_t maxh1 = -1
+        ) : id(id1), w(w1), h(h1), x(x1), y(y1), maxw(maxw1), maxh(maxh1), refcount_(0) {
+
+        if (maxw == -1) {
+            maxw = w;
+        }
+        if (maxh == -1) {
+            maxh = h;
         }
     }
 
@@ -43,13 +60,14 @@ public:
     int32_t h;
     int32_t x;
     int32_t y;
+    int32_t maxw;
+    int32_t maxh;
 
 private:
-    int32_t getId() {
-        static std::atomic<std::int32_t> next { 0 };
-        return ++next;
-    };
+
+    int32_t refcount_;
 };
+
 
 
 class Shelf {
@@ -62,6 +80,7 @@ public:
      * @param  {int32_t}  y   Top coordinate of the new shelf
      * @param  {int32_t}  w   Width of the new shelf
      * @param  {int32_t}  h   Height of the new shelf
+     *
      * @example
      * Shelf shelf(64, 512, 24);
      */
@@ -76,6 +95,7 @@ public:
      * @param    {int32_t}  w     Width of the bin to allocate
      * @param    {int32_t}  h     Height of the bin to allocate
      * @returns  {optional<Bin>}  `Bin` struct with `id`, `x`, `y`, `w`, `h` members
+     *
      * @example
      * optional<Bin> result = shelf.alloc(-1, 12, 16);
      */
@@ -95,6 +115,7 @@ public:
      * @private
      * @param    {int32_t}  w  Requested new width of the shelf
      * @returns  {bool}     `true` if resize succeeded, `false` if failed
+     *
      * @example
      * shelf.resize(512);
      */
@@ -117,6 +138,7 @@ private:
     int32_t h_;
     int32_t wfree_;
 };
+
 
 
 class ShelfPack {
@@ -144,6 +166,7 @@ public:
      * @param  {int32_t}  [h=64]  Initial width of the sprite
      * @param  {ShelfPackOptions}  [options]
      * @param  {bool} [options.autoResize=false]  If `true`, the sprite will automatically grow
+     *
      * @example
      * ShelfPack::ShelfPackOptions options;
      * options.autoResize = false;
@@ -153,16 +176,18 @@ public:
         width_ = w > 0 ? w : 64;
         height_ = h > 0 ? h : 64;
         autoResize_ = options.autoResize;
+        maxId_ = 0;
     }
 
 
     /**
      * Batch pack multiple bins into the sprite.
      *
-     * @param   {vector<Bin>}   bins Array of requested bins - each object should have `w`, `h` values
-     * @param   {PackOptions}  [options]
+     * @param   {vector<Bin>}   bins   Array of requested bins - each object should have `w`, `h` values
+     * @param   {PackOptions}   [options]
      * @param   {bool} [options.inPlace=false] If `true`, the supplied bin objects will be updated inplace with `x` and `y` values
-     * @returns {vector<Bin>}   Array of Bins - each bin is a struct with `x`, `y`, `w`, `h` values
+     * @returns {vector<Bin&>}   Array of Bin references - each bin is a struct with `x`, `y`, `w`, `h` values
+     *
      * @example
      * std::vector<Bin> moreBins;
      * moreBins.emplace_back(-1, 12, 24);
@@ -171,7 +196,7 @@ public:
      *
      * ShelfPack::PackOptions options;
      * options.inPlace = true;
-     * std::vector<Bin> results = sprite.pack(moreBins, options);
+     * std::vector<Bin&> results = sprite.pack(moreBins, options);
      */
     std::vector<Bin> pack(std::vector<Bin> &bins, const PackOptions &options = PackOptions{}) {
         std::vector<Bin> results;
@@ -213,33 +238,74 @@ public:
     /**
      * Pack a single bin into the sprite.
      *
-     * @param   {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
-     * @param   {int32_t}  w     Width of the bin to allocate
-     * @param   {int32_t}  h     Height of the bin to allocate
-     * @returns {optional<Bin>}  Bin struct with `id`, `x`, `y`, `w`, `h` members
+     * @param   {int32_t}  id     Unique bin identifier, pass -1 to generate a new one
+     * @param   {int32_t}  w      Width of the bin to allocate
+     * @param   {int32_t}  h      Height of the bin to allocate
+     * @returns {optional<Bin>}  Bin reference with `id`, `x`, `y`, `w`, `h` members
+     *
      * @example
      * optional<Bin> result = sprite.packOne(-1, 12, 16);
      */
     optional<Bin> packOne(int32_t id, int32_t w, int32_t h) {
         int32_t y = 0;
-        struct { Shelf* pshelf = NULL; int32_t waste = INT32_MAX; } best;
+        int32_t waste = 0;
+        struct {
+            Shelf* pshelf = NULL;
+            Bin* pfreebin = NULL;
+            int32_t waste = INT32_MAX;
+        } best;
 
-        // find the best shelf
+        // if id was supplied, attempt a lookup..
+        if (id != -1) {
+            optional<Bin> bin = getBin(id);
+            if (bin != nullopt) {   // we packed this bin already
+                ref((Bin&)bin);
+                return bin;
+            }
+            maxId_ = std::max(id, maxId_);
+        } else {
+            id = ++maxId_;
+        }
+
+        // First try to reuse a free bin..
+        for (auto& freebin : freebins_) {
+            // exactly the right height and width, use it..
+            if (h == freebin->maxh && w == freebin->maxw) {
+                return allocFreebin(*freebin, id, w, h);
+            }
+            // not enough height or width, skip it..
+            if (h > freebin->maxh || w > freebin->maxw) {
+                continue;
+            }
+            // extra height or width, minimize wasted area..
+            if (h <= freebin->maxh && w <= freebin->maxw) {
+                waste = (freebin->maxw * freebin->maxh) - (w * h);
+                if (waste < best.waste) {
+                    best.waste = waste;
+                    best.pfreebin = freebin;
+                }
+            }
+        }
+
+        // Next find the best shelf
         for (auto& shelf : shelves_) {
             y += shelf.h();
 
-            // exactly the right height with width to spare, pack it..
-            if (h == shelf.h() && w <= shelf.wfree()) {
-                count(h);
-                return shelf.alloc(id, w, h);
-            }
-            // not enough height or width, skip it..
-            if (h > shelf.h() || w > shelf.wfree()) {
+            // not enough width on this shelf, skip it..
+            if (w > shelf.wfree()) {
                 continue;
             }
-            // maybe enough height or width, minimize waste..
-            if (h < shelf.h() && w <= shelf.wfree()) {
-                int32_t waste = shelf.h() - h;
+            // exactly the right height, pack it..
+            if (h == shelf.h()) {
+                return allocShelf(shelf, id, w, h);
+            }
+            // not enough height, skip it..
+            if (h > shelf.h()) {
+                continue;
+            }
+            // extra height, minimize wasted area..
+            if (h < shelf.h()) {
+                waste = (shelf.h() - h) * w;
                 if (waste < best.waste) {
                     best.waste = waste;
                     best.pshelf = &shelf;
@@ -247,19 +313,21 @@ public:
             }
         }
 
+        if (best.pfreebin) {
+            return allocFreebin(*best.pfreebin, id, w, h);
+        }
+
         if (best.pshelf) {
-            count(h);
-            return best.pshelf->alloc(id, w, h);
+            return allocShelf(*best.pshelf, id, w, h);
         }
 
-        // add shelf..
+        // No free bins or shelves.. add shelf..
         if (h <= (height_ - y) && w <= width_) {
-            count(h);
             shelves_.emplace_back(y, width_, h);
-            return shelves_.back().alloc(id, w, h);
+            return allocShelf(shelves_.back(), id, w, h);
         }
 
-        // no more space..
+        // No room for more shelves..
         // If `autoResize` option is set, grow the sprite as follows:
         //  * double whichever sprite dimension is smaller (`w1` or `h1`)
         //  * if sprite dimensions are equal, grow width before height
@@ -286,6 +354,74 @@ public:
 
 
     /**
+     * Return a packed bin given its id, or nullopt if the id is not found
+     *
+     * @param    {int32_t}         id  Unique identifier for this bin,
+     * @returns  {optional<Bin>}  Bin reference with `id`, `x`, `y`, `w`, `h` members
+     *
+     * @example
+     * optional<Bin> result = sprite.getBin(5);
+     */
+    optional<Bin> getBin(int32_t id) {
+        std::map<int32_t, Bin>::iterator it = bins_.find(id);
+        if (it == bins_.end())
+            return nullopt;
+        else
+            return (Bin&)it->second;
+    }
+
+
+    /**
+     * Increment the ref count of a bin and update statistics.
+     *
+     * @param    {Bin&}      bin  Bin reference
+     * @returns  {int32_t}   New refcount of the bin
+     *
+     * @example
+     * optional<Bin> bin = sprite.getBin(5);
+     * if (bin != nullopt) {
+     *     sprite.ref(bin);
+     * }
+     */
+    int32_t ref(Bin& bin) {
+        if (++bin.refcount_ == 1) {   // a new Bin.. record height in stats historgram..
+            int32_t h = bin.h;
+            stats_[h] = (stats_[h] | 0) + 1;
+        }
+
+        return bin.refcount_;
+    };
+
+
+    /**
+     * Decrement the ref count of a bin and update statistics.
+     * The bin will be automatically marked as free space once the refcount reaches 0.
+     *
+     * @param    {Bin&}     bin  Bin reference
+     * @returns  {int32_t}  New refcount of the bin
+     *
+     * @example
+     * optional<Bin> bin = sprite.getBin(5);
+     * if (bin != nullopt) {
+     *     sprite.unref(bin);
+     * }
+     */
+    int32_t unref(Bin& bin) {
+        if (bin.refcount_ == 0) {
+            return 0;
+        }
+
+        if (--bin.refcount_ == 0) {
+            stats_[bin.h]--;
+            bins_.erase(bin.id);
+            freebins_.push_back(&bin);
+        }
+
+        return bin.refcount_;
+    }
+
+
+    /**
      * Clear the sprite.
      *
      * @example
@@ -303,6 +439,7 @@ public:
      * @param   {int32_t}  w  Requested new sprite width
      * @param   {int32_t}  h  Requested new sprite height
      * @returns {bool}     `true` if resize succeeded, `false` if failed
+     *
      * @example
      * sprite.resize(256, 256);
      */
@@ -318,19 +455,68 @@ public:
     int32_t width() const { return width_; }
     int32_t height() const { return height_; }
 
+
 private:
-    void count(int32_t h) {
-       stats_[h]++;
+
+    /**
+     * Called by packOne() to allocate a bin by reusing an existing freebin
+     *
+     * @private
+     * @param    {Bin&}       bin    Reference to a freebin to reuse
+     * @param    {int32_t}    w      Width of the bin to allocate
+     * @param    {int32_t}    h      Height of the bin to allocate
+     * @param    {int32_t}    id     Unique identifier for this bin
+     * @returns  {Bin&}       Bin reference with `id`, `x`, `y`, `w`, `h` properties
+     *
+     * @example
+     * Bin& bin = sprite.allocFreebin(freebin, 12, 16, 5);
+     */
+    Bin& allocFreebin(Bin& bin, int32_t id, int32_t w, int32_t h) {
+        freebins_.erase(std::remove(freebins_.begin(), freebins_.end(), &bin), freebins_.end());
+        bin.id = id;
+        bin.w = w;
+        bin.h = h;
+        bin.refcount_ = 0;
+        bins_[id] = bin;
+        ref(bin);
+        return bin;
     }
+
+
+    /**
+     * Called by `packOne() to allocate bin on an existing shelf
+     *
+     * @private
+     * @param    {Shelf&}         shelf  Reference to the shelf to allocate the bin on
+     * @param    {int32_t}        w      Width of the bin to allocate
+     * @param    {int32_t}        h      Height of the bin to allocate
+     * @param    {int32_t}        id     Unique identifier for this bin
+     * @returns  {optional<Bin>}  Bin reference with `id`, `x`, `y`, `w`, `h` properties
+     *
+     * @example
+     * optional<Bin> bin = sprite.allocShelf(shelf, 12, 16, 5);
+     */
+    optional<Bin> allocShelf(Shelf& shelf, int32_t id, int32_t w, int32_t h) {
+        optional<Bin> bin = shelf.alloc(id, w, h);
+        if (bin != nullopt) {
+            bins_[id] = (Bin&)bin;
+            ref((Bin&)bin);
+        }
+        return bin;
+    }
+
 
     int32_t width_;
     int32_t height_;
     bool autoResize_;
+    std::map<int32_t, Bin> bins_;
     std::vector<Shelf> shelves_;
+    std::vector<Bin*> freebins_;
     std::map<int32_t, int32_t> stats_;
+    int32_t maxId_;
 };
 
 
-}
+}  // namespace mapbox
 
 #endif
