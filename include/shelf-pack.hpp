@@ -1,7 +1,6 @@
 #ifndef SHELF_PACK_HPP
 #define SHELF_PACK_HPP
 
-#include <experimental/optional>
 #include <algorithm>
 #include <cstdint>
 #include <map>
@@ -9,15 +8,11 @@
 
 namespace mapbox {
 
-template <typename T>
-using optional = std::experimental::optional<T>;
-using std::experimental::nullopt;
-
 const char * const SHELF_PACK_VERSION = "1.0.0";
 
 
 
-struct Bin {
+class Bin {
     friend class ShelfPack;
 
 public:
@@ -94,19 +89,19 @@ public:
      * @param    {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
      * @param    {int32_t}  w     Width of the bin to allocate
      * @param    {int32_t}  h     Height of the bin to allocate
-     * @returns  {optional<Bin>}  `Bin` struct with `id`, `x`, `y`, `w`, `h` members
+     * @returns  {Bin*}     `Bin` with `id`, `x`, `y`, `w`, `h` members
      *
      * @example
-     * optional<Bin> result = shelf.alloc(-1, 12, 16);
+     * Bin* result = shelf.alloc(-1, 12, 16);
      */
-    optional<Bin> alloc(int32_t id, int32_t w, int32_t h) {
+    Bin* alloc(int32_t id, int32_t w, int32_t h) {
         if (w > wfree_ || h > h_) {
-            return nullopt;
+            return NULL;
         }
         int32_t x = x_;
         x_ += w;
         wfree_ -= w;
-        return Bin(id, w, h, x, y_);
+        return new Bin(id, w, h, x, y_);
     }
 
     /**
@@ -181,12 +176,25 @@ public:
 
 
     /**
+     * ShelfPack destructor
+     */
+    ~ShelfPack() {
+        for (auto& kv : bins_) {
+            delete kv.second;
+        }
+        for (auto& freebin : freebins_) {
+            delete freebin;
+        }
+    }
+
+
+    /**
      * Batch pack multiple bins into the sprite.
      *
      * @param   {vector<Bin>}   bins   Array of requested bins - each object should have `w`, `h` values
      * @param   {PackOptions}   [options]
      * @param   {bool} [options.inPlace=false] If `true`, the supplied bin objects will be updated inplace with `x` and `y` values
-     * @returns {vector<Bin&>}   Array of Bin references - each bin is a struct with `x`, `y`, `w`, `h` values
+     * @returns {vector<Bin*>}   Array of Bin pointers - each bin is a struct with `x`, `y`, `w`, `h` values
      *
      * @example
      * std::vector<Bin> moreBins;
@@ -196,22 +204,23 @@ public:
      *
      * ShelfPack::PackOptions options;
      * options.inPlace = true;
-     * std::vector<Bin&> results = sprite.pack(moreBins, options);
+     * std::vector<Bin*> results = sprite.pack(moreBins, options);
      */
-    std::vector<Bin> pack(std::vector<Bin> &bins, const PackOptions &options = PackOptions{}) {
-        std::vector<Bin> results;
+    std::vector<Bin*> pack(std::vector<Bin> &bins, const PackOptions &options = PackOptions{}) {
+        std::vector<Bin*> results;
 
         for (auto& bin : bins) {
             if (bin.w && bin.h) {
-                optional<Bin> allocation = packOne(bin.id, bin.w, bin.h);
+                Bin* allocation = packOne(bin.id, bin.w, bin.h);
                 if (!allocation) {
                     continue;
                 }
                 if (options.inPlace) {
+                    bin.id = allocation->id;
                     bin.x = allocation->x;
                     bin.y = allocation->y;
                 }
-                results.push_back(*allocation);
+                results.push_back(allocation);
             }
         }
 
@@ -241,12 +250,12 @@ public:
      * @param   {int32_t}  id     Unique bin identifier, pass -1 to generate a new one
      * @param   {int32_t}  w      Width of the bin to allocate
      * @param   {int32_t}  h      Height of the bin to allocate
-     * @returns {optional<Bin>}  Bin reference with `id`, `x`, `y`, `w`, `h` members
+     * @returns {Bin*}     Pointer to a packed Bin with `id`, `x`, `y`, `w`, `h` members
      *
      * @example
-     * optional<Bin> result = sprite.packOne(-1, 12, 16);
+     * Bin* result = sprite.packOne(-1, 12, 16);
      */
-    optional<Bin> packOne(int32_t id, int32_t w, int32_t h) {
+    Bin* packOne(int32_t id, int32_t w, int32_t h) {
         int32_t y = 0;
         int32_t waste = 0;
         struct {
@@ -257,10 +266,10 @@ public:
 
         // if id was supplied, attempt a lookup..
         if (id != -1) {
-            optional<Bin> bin = getBin(id);
-            if (bin != nullopt) {   // we packed this bin already
-                ref((Bin&)bin);
-                return bin;
+            Bin* pbin = getBin(id);
+            if (pbin) {   // we packed this bin already
+                ref(*pbin);
+                return pbin;
             }
             maxId_ = std::max(id, maxId_);
         } else {
@@ -349,25 +358,22 @@ public:
             return packOne(id, w, h);  // retry
         }
 
-        return nullopt;
+        return NULL;
     }
 
 
     /**
-     * Return a packed bin given its id, or nullopt if the id is not found
+     * Return a packed bin given its id, or NULL if the id is not found
      *
-     * @param    {int32_t}         id  Unique identifier for this bin,
-     * @returns  {optional<Bin>}  Bin reference with `id`, `x`, `y`, `w`, `h` members
+     * @param    {int32_t}  id  Unique identifier for this bin,
+     * @returns  {Bin*}     Pointer to a packed Bin with `id`, `x`, `y`, `w`, `h` members
      *
      * @example
-     * optional<Bin> result = sprite.getBin(5);
+     * Bin* result = sprite.getBin(5);
      */
-    optional<Bin> getBin(int32_t id) {
-        std::map<int32_t, Bin>::iterator it = bins_.find(id);
-        if (it == bins_.end())
-            return nullopt;
-        else
-            return (Bin&)it->second;
+    Bin* getBin(int32_t id) {
+        std::map<int32_t, Bin*>::iterator it = bins_.find(id);
+        return (it == bins_.end()) ? NULL : it->second;
     }
 
 
@@ -466,20 +472,20 @@ private:
      * @param    {int32_t}    w      Width of the bin to allocate
      * @param    {int32_t}    h      Height of the bin to allocate
      * @param    {int32_t}    id     Unique identifier for this bin
-     * @returns  {Bin&}       Bin reference with `id`, `x`, `y`, `w`, `h` properties
+     * @returns  {Bin*}       Pointer to a Bin with `id`, `x`, `y`, `w`, `h` properties
      *
      * @example
-     * Bin& bin = sprite.allocFreebin(freebin, 12, 16, 5);
+     * Bin* bin = sprite.allocFreebin(freebin, 12, 16, 5);
      */
-    Bin& allocFreebin(Bin& bin, int32_t id, int32_t w, int32_t h) {
+    Bin* allocFreebin(Bin& bin, int32_t id, int32_t w, int32_t h) {
         freebins_.erase(std::remove(freebins_.begin(), freebins_.end(), &bin), freebins_.end());
         bin.id = id;
         bin.w = w;
         bin.h = h;
         bin.refcount_ = 0;
-        bins_[id] = bin;
+        bins_[id] = &bin;
         ref(bin);
-        return bin;
+        return &bin;
     }
 
 
@@ -487,29 +493,29 @@ private:
      * Called by `packOne() to allocate bin on an existing shelf
      *
      * @private
-     * @param    {Shelf&}         shelf  Reference to the shelf to allocate the bin on
-     * @param    {int32_t}        w      Width of the bin to allocate
-     * @param    {int32_t}        h      Height of the bin to allocate
-     * @param    {int32_t}        id     Unique identifier for this bin
-     * @returns  {optional<Bin>}  Bin reference with `id`, `x`, `y`, `w`, `h` properties
+     * @param    {Shelf&}    shelf  Reference to the shelf to allocate the bin on
+     * @param    {int32_t}   w      Width of the bin to allocate
+     * @param    {int32_t}   h      Height of the bin to allocate
+     * @param    {int32_t}   id     Unique identifier for this bin
+     * @returns  {Bin*}      Pointer to a Bin with `id`, `x`, `y`, `w`, `h` properties
      *
      * @example
-     * optional<Bin> bin = sprite.allocShelf(shelf, 12, 16, 5);
+     * Bin* bin = sprite.allocShelf(shelf, 12, 16, 5);
      */
-    optional<Bin> allocShelf(Shelf& shelf, int32_t id, int32_t w, int32_t h) {
-        optional<Bin> bin = shelf.alloc(id, w, h);
-        if (bin != nullopt) {
-            bins_[id] = (Bin&)bin;
-            ref((Bin&)bin);
+    Bin* allocShelf(Shelf& shelf, int32_t id, int32_t w, int32_t h) {
+        Bin* pbin = shelf.alloc(id, w, h);
+        if (pbin) {
+            bins_[id] = pbin;
+            ref(*pbin);
         }
-        return bin;
+        return pbin;
     }
 
 
     int32_t width_;
     int32_t height_;
     bool autoResize_;
-    std::map<int32_t, Bin> bins_;
+    std::map<int32_t, Bin*> bins_;
     std::vector<Shelf> shelves_;
     std::vector<Bin*> freebins_;
     std::map<int32_t, int32_t> stats_;
