@@ -86,6 +86,7 @@ public:
 
     /**
      * Allocate a single bin into the shelf.
+     * Memory to store the bin is dynamically allocated on the heap.
      *
      * @private
      * @param    {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
@@ -181,12 +182,7 @@ public:
      * ShelfPack destructor
      */
     ~ShelfPack() {
-        for (auto& kv : bins_) {
-            delete kv.second;
-        }
-        for (auto& freebin : freebins_) {
-            delete freebin;
-        }
+        clear();
     }
 
 
@@ -404,6 +400,7 @@ public:
     /**
      * Decrement the ref count of a bin and update statistics.
      * The bin will be automatically marked as free space once the refcount reaches 0.
+     * Memory for the bin is not freed, as unreferenced bins may be reused later.
      *
      * @param    {Bin&}     bin  Bin reference
      * @returns  {int32_t}  New refcount of the bin
@@ -430,14 +427,28 @@ public:
 
 
     /**
-     * Clear the sprite.
+     * Clear the sprite. Frees all bins, resets all statistics,
+     *   and frees all dynamically allocated memory.
+     *
+     * Warning: any previously returned `Bin*` pointers will be
+     *   invalid after calling clear.
      *
      * @example
      * sprite.clear();
      */
     void clear() {
+        for (auto& kv : bins_) {
+            delete kv.second;
+        }
+        for (auto& freebin : freebins_) {
+            delete freebin;
+        }
+
+        bins_.clear();
         shelves_.clear();
+        freebins_.clear();
         stats_.clear();
+        maxId_ = 0;
     }
 
 
@@ -493,6 +504,7 @@ private:
 
     /**
      * Called by `packOne() to allocate bin on an existing shelf
+     * Memory for the bin is allocated on the heap by `shelf.alloc()`
      *
      * @private
      * @param    {Shelf&}    shelf  Reference to the shelf to allocate the bin on

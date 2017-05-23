@@ -763,7 +763,7 @@ void testClear() {
     std::cout << "clear succeeds";
 
     ShelfPack sprite(10, 10);
-    Bin* bin1 = sprite.packOne(1, 10, 10);
+    Bin* bin1 = sprite.packOne(-1, 10, 10);
 
     //  x: 0, y: 0, w: 10, h: 10
     assert(bin1->id == 1);
@@ -774,22 +774,21 @@ void testClear() {
     assert(bin1->maxw == 10);
     assert(bin1->maxh == 10);
 
-    Bin* bin2 = sprite.packOne(2, 10, 10);
+    Bin* bin2 = sprite.packOne(-1, 10, 10);
     assert(bin2 == NULL);
 
     sprite.clear();
-    Bin* bin3 = sprite.packOne(3, 10, 10);
+
+    Bin* bin3 = sprite.packOne(-1, 10, 10);
 
     //  x: 0, y: 0, w: 10, h: 10
-    assert(bin3->id == 3);
+    assert(bin3->id == 1);    // clear resets max id
     assert(bin3->x == 0);
     assert(bin3->y == 0);
     assert(bin3->w == 10);
     assert(bin3->h == 10);
     assert(bin3->maxw == 10);
     assert(bin3->maxh == 10);
-
-    assert(bin3 != bin1);
 
     std::cout << " - OK" << std::endl;
 }
