@@ -25,7 +25,7 @@ rectangles vary significantly in height.
 
 ### Usage
 
-#### Basic
+#### Basic Usage
 
 ```cpp
 #include <shelf-pack.hpp>
@@ -40,14 +40,27 @@ void main(void) {
 
     // Pack bins one at a time..
     for (int i = 0; i < 5; i++) {
-        optional<Bin> bin = sprite.packOne(10, 10);   // request width, height
-        // `packOne` returns an `Bin` struct with `x`, `y`, `w`, `h` members..
+        Bin* bin = sprite.packOne(-1, 10, 10);
+        // `packOne()` accepts parameters: `id`, `width`, `height`
+        // and returns a pointer to a single allocated Bin object..
+        // `id` is optional - pass `-1` and shelf-pack will make up a number for you..
 
         if (bin) {
-            std::cout << "bin packed at " << bin->x << ", " << bin->y << std::endl;
+            std::cout << "Bin { id: " << bin->id
+                << ", x: " << bin->x << ", y: " << bin->y
+                << ", w: " << bin->w << ", h: " << bin->h
+                << ", refcount: " << bin->refcount() << " }" << std::endl;
         } else {
             std::cout << "out of space" << std::endl;
         }
+
+        /* output:
+        Bin { id: 1, x: 0, y: 0, w: 10, h: 10, refcount: 1 }
+        Bin { id: 2, x: 32, y: 0, w: 10, h: 10, refcount: 1 }
+        Bin { id: 3, x: 0, y: 32, w: 10, h: 10, refcount: 1 }
+        Bin { id: 4, x: 32, y: 32, w: 10, h: 10, refcount: 1 }
+        out of space
+        */
     }
 
     // Clear sprite and start over..
@@ -74,44 +87,157 @@ void main(void) {
     ShelfPack sprite(10, 10, options);
 
     // Bins can be allocated in batches..
-    // Each bin should be initialized with `w`, `h` (width, height)..
+    // Each bin should be initialized with `id`, `w` (width), `h` (height)..
     std::vector<Bin> bins;
-    bins.emplace_back(10, 10);
-    bins.emplace_back(10, 12);
-    bins.emplace_back(10, 12);
-    bins.emplace_back(10, 10);
+    bins.emplace_back(-1, 10, 10);
+    bins.emplace_back(-1, 10, 12);
+    bins.emplace_back(-1, 10, 12);
+    bins.emplace_back(-1, 10, 10);
 
-    std::vector<Bin> results = sprite.pack(bins);
-    // `pack` returns a vector of packed bin, with `x`, `y`, `w`, `h` values..
+    // `pack()` returns a vector of Bin* pointers, with `x`, `y`, `w`, `h` values..
+    std::vector<Bin*> results = sprite.pack(bins);
 
     for (const auto& bin : results) {
-        std::cout << "bin packed at " << bin.x << ", " << bin.y << std::endl;
+        std::cout << "Bin { id: " << bin->id
+            << ", x: " << bin->x << ", y: " << bin->y
+            << ", w: " << bin->w << ", h: " << bin->h
+            << ", refcount: " << bin->refcount() << " }" << std::endl;
     }
-
+    /* output:
+    Bin { id: 1, x: 0, y: 0, w: 10, h: 10, refcount: 1 }
+    Bin { id: 2, x: 0, y: 10, w: 10, h: 12, refcount: 1 }
+    Bin { id: 3, x: 10, y: 10, w: 10, h: 12, refcount: 1 }
+    Bin { id: 4, x: 10, y: 0, w: 10, h: 10, refcount: 1 }
+    */
 
     // If you don't mind letting ShelfPack modify your objects,
-    // the `inPlace` option will assign `x` and `y` values to the incoming Bins.
+    // the `inPlace` option will assign `id`, `x`, `y` values to the incoming Bins.
     // Fancy!
-    std::vector<Bin> moreBins;
-    moreBins.emplace_back(12, 24);
-    moreBins.emplace_back(12, 12);
-    moreBins.emplace_back(10, 10);
+    std::vector<Bin> myBins;
+    myBins.emplace_back(-1, 12, 24);
+    myBins.emplace_back(-1, 12, 12);
+    myBins.emplace_back(-1, 10, 10);
 
     ShelfPack::PackOptions options;
     options.inPlace = true;
 
-    sprite.pack(moreBins, options);
-    for (const auto& bin_ : moreBins) {
-        std::cout << "bin packed at " << bin_.x << ", " << bin_.y << std::endl;
+    sprite.pack(myBins, options);
+
+    for (const auto& mybin : myBins) {
+        std::cout << "Bin { id: " << mybin.id
+            << ", x: " << mybin.x << ", y: " << mybin.y
+            << ", w: " << mybin.w << ", h: " << mybin.h
+            << ", refcount: " << mybin.refcount() << " }" << std::endl;
     }
 
+    /* output:
+    { id: 5, x: 0, y: 22, w: 12, h: 24, refcount: 1 }
+    { id: 6, x: 20, y: 10, w: 12, h: 12, refcount: 1 }
+    { id: 7, x: 20, y: 0, w: 10, h: 10, refcount: 1 }
+    */
 }
 
 ```
 
+#### Reference Counting
+
+```cpp
+#include <shelf-pack.hpp>
+#include <iostream>
+#include <array>
+
+void main(void) {
+
+    // Initialize the sprite with a width and height..
+    ShelfPack sprite(64, 64);
+    Bin* bin;
+
+    // Allocated bins are automatically reference counted.
+    // They start out having a refcount of 1.
+    std::array<int32_t, 3> ids = { 100, 101, 102 };
+    for(const auto& id : ids) {
+        bin = sprite.packOne(id, 16, 16);
+        std::cout << "Bin { id: " << bin->id
+            << ", x: " << bin->x << ", y: " << bin->y
+            << ", w: " << bin->w << ", h: " << bin->h
+            << ", refcount: " << bin->refcount() << " }" << std::endl;
+    }
+
+    /* output:
+    Bin { id: 100, x: 0, y: 0, w: 16, h: 16, refcount: 1 }
+    Bin { id: 101, x: 16, y: 0, w: 16, h: 16, refcount: 1 }
+    Bin { id: 102, x: 32, y: 0, w: 16, h: 16, refcount: 1 }
+    */
+
+    // If you try to pack the same id again, shelf-pack will not re-pack it.
+    // Instead, it will increment the reference count automatically..
+    Bin* bin102 = sprite.packOne(102, 16, 16);
+    std::cout << "Bin { id: " << bin102->id
+        << ", x: " << bin102->x << ", y: " << bin102->y
+        << ", w: " << bin102->w << ", h: " << bin102->h
+        << ", refcount: " << bin102->refcount() << " }" << std::endl;
+
+    /* output:
+    Bin { id: 102, x: 32, y: 0, w: 16, h: 16, refcount: 2 }
+    */
+
+    // You can also manually increment the reference count..
+    Bin* bin101 = sprite.getBin(101);
+    sprite.ref(*bin101);
+    std::cout << "Bin { id: " << bin101->id
+        << ", x: " << bin101->x << ", y: " << bin101->y
+        << ", w: " << bin101->w << ", h: " << bin101->h
+        << ", refcount: " << bin101->refcount() << " }" << std::endl;
+
+    /* output:
+    Bin { id: 101, x: 16, y: 0, w: 16, h: 16, refcount: 2 }
+    */
+
+    // ...and decrement it!
+    Bin* bin100 = sprite.getBin(100);
+    sprite.unref(*bin100);
+    std::cout << "Bin { id: " << bin100->id
+        << ", x: " << bin100->x << ", y: " << bin100->y
+        << ", w: " << bin100->w << ", h: " << bin100->h
+        << ", refcount: " << bin100->refcount() << " }" << std::endl;
+
+    /* output:
+    Bin { id: 100, x: 0, y: 0, w: 16, h: 16, refcount: 0 }
+    */
+
+    // Bins with a refcount of 0 are considered free space.
+    // Next time a bin is packed, shelf-back tries to reuse free space first.
+    // See how Bin 103 gets allocated at [0,0] - Bin 100's old spot!
+    Bin* bin103 = sprite.packOne(103, 16, 15);
+    std::cout << "Bin { id: " << bin103->id
+        << ", x: " << bin103->x << ", y: " << bin103->y
+        << ", w: " << bin103->w << ", h: " << bin103->h
+        << ", refcount: " << bin103->refcount() << " }" << std::endl;
+
+    /* output:
+    Bin { id: 103, x: 0, y: 0, w: 16, h: 15, refcount: 1 }
+    */
+
+    // Bin 103 may be smaller (16x15) but it knows 16x16 was its original size.
+    // If that space becomes free again, a 16x16 bin will still fit there.
+    sprite.unref(*bin103);
+    Bin* bin104 = sprite.packOne(104, 16, 16);
+    std::cout << "Bin { id: " << bin104->id
+        << ", x: " << bin104->x << ", y: " << bin104->y
+        << ", w: " << bin104->w << ", h: " << bin104->h
+        << ", refcount: " << bin104->refcount() << " }" << std::endl;
+
+    /* output:
+    Bin { id: 104, x: 0, y: 0, w: 16, h: 16, refcount: 1 }
+    */
+
+```
+
+
 ### Documentation
 
-Complete API documentation is here:  http://mapbox.github.io/shelf-pack/docs/
+Complete API documentation can be found on the JavaScript version of the project:
+http://mapbox.github.io/shelf-pack/docs/
 
 
 ### See also
