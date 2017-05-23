@@ -21,26 +21,26 @@ public:
      *
      * @private
      * @class  Shelf
-     * @param  {int32_t}  id        Unique bin identifier
-     * @param  {int32_t}  [w1=-1]   Width of the new Bin
-     * @param  {int32_t}  [h1=-1]   Height of the new Bin
-     * @param  {int32_t}  [x1=-1]   X location of the Bin
-     * @param  {int32_t}  [y1=-1]   Y location of the Bin
-     * @param  {int32_t}  [maxw1=-1]   Maximum Width of the new Bin
-     * @param  {int32_t}  [maxh1=-1]   Maximum Height of the new Bin
+     * @param  {int32_t}  id          Unique bin identifier
+     * @param  {int32_t}  [w1=-1]     Width of the new Bin
+     * @param  {int32_t}  [h1=-1]     Height of the new Bin
+     * @param  {int32_t}  [maxw1=-1]  Maximum Width of the new Bin
+     * @param  {int32_t}  [maxh1=-1]  Maximum Height of the new Bin
+     * @param  {int32_t}  [x1=-1]     X location of the Bin
+     * @param  {int32_t}  [y1=-1]     Y location of the Bin
      *
      * @example
-     * Bin b(-1, 12, 16, 0, 0);
+     * Bin b(-1, 12, 16);
      */
     explicit Bin(
-            int32_t id1 = -1,
-            int32_t w1 = -1,
-            int32_t h1 = -1,
-            int32_t x1 = -1,
-            int32_t y1 = -1,
-            int32_t maxw1 = -1,
-            int32_t maxh1 = -1
-        ) : id(id1), w(w1), h(h1), x(x1), y(y1), maxw(maxw1), maxh(maxh1), refcount_(0) {
+        int32_t id1 = -1,
+        int32_t w1 = -1,
+        int32_t h1 = -1,
+        int32_t maxw1 = -1,
+        int32_t maxh1 = -1,
+        int32_t x1 = -1,
+        int32_t y1 = -1
+    ) : id(id1), w(w1), h(h1), maxw(maxw1), maxh(maxh1), x(x1), y(y1), refcount_(0) {
 
         if (maxw == -1) {
             maxw = w;
@@ -53,10 +53,10 @@ public:
     int32_t id;
     int32_t w;
     int32_t h;
-    int32_t x;
-    int32_t y;
     int32_t maxw;
     int32_t maxh;
+    int32_t x;
+    int32_t y;
 
     int32_t refcount() const { return refcount_; }
 
@@ -104,7 +104,7 @@ public:
         int32_t x = x_;
         x_ += w;
         wfree_ -= w;
-        return new Bin(id, w, h, x, y_);
+        return new Bin(id, w, h, w, h_, x, y_);
     }
 
     /**

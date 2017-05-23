@@ -143,7 +143,7 @@ void testPack3() {
     assert(results[3]->w == 10);
     assert(results[3]->h == 9);
     assert(results[3]->maxw == 10);
-    // assert(results[3]->maxh == 10);  //FIX
+    assert(results[3]->maxh == 10);
 
     std::cout << " - OK" << std::endl;
 }
@@ -514,7 +514,7 @@ void testPackOne7() {
     assert(bin4->w == 10);
     assert(bin4->h == 9);
     assert(bin4->maxw == 10);
-    // assert(bin4->maxh == 10);  // FIX
+    assert(bin4->maxh == 10);
 
     std::cout << " - OK" << std::endl;
 }
