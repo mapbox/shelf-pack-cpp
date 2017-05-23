@@ -58,6 +58,8 @@ public:
     int32_t maxw;
     int32_t maxh;
 
+    int32_t refcount() const { return refcount_; }
+
 private:
 
     int32_t refcount_;
