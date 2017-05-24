@@ -84,28 +84,32 @@ public:
     explicit Shelf(int32_t y, int32_t w, int32_t h) :
         x_(0), y_(y), w_(w), h_(h), wfree_(w) { }
 
+
     /**
      * Allocate a single bin into the shelf.
-     * Memory to store the bin is dynamically allocated on the heap.
+     * Bin is stored in a `bins_` container.
+     * If the shelf is destroyed, the returned pointer is no longer valid.
      *
      * @private
      * @param    {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
      * @param    {int32_t}  w     Width of the bin to allocate
      * @param    {int32_t}  h     Height of the bin to allocate
-     * @returns  {Bin*}     `Bin` with `id`, `x`, `y`, `w`, `h` members
+     * @returns  {Bin*}     `Bin` pointer with `id`, `x`, `y`, `w`, `h` members
      *
      * @example
      * Bin* result = shelf.alloc(-1, 12, 16);
      */
     Bin* alloc(int32_t id, int32_t w, int32_t h) {
         if (w > wfree_ || h > h_) {
-            return NULL;
+            return nullptr;
         }
         int32_t x = x_;
         x_ += w;
         wfree_ -= w;
-        return new Bin(id, w, h, w, h_, x, y_);
+        bins_.emplace_back(id, w, h, w, h_, x, y_);
+        return &bins_.back();
     }
+
 
     /**
      * Resize the shelf.
@@ -135,6 +139,8 @@ private:
     int32_t w_;
     int32_t h_;
     int32_t wfree_;
+
+    std::vector<Bin> bins_;
 };
 
 
@@ -175,14 +181,6 @@ public:
         height_ = h > 0 ? h : 64;
         autoResize_ = options.autoResize;
         maxId_ = 0;
-    }
-
-
-    /**
-     * ShelfPack destructor
-     */
-    ~ShelfPack() {
-        clear();
     }
 
 
@@ -257,8 +255,8 @@ public:
         int32_t y = 0;
         int32_t waste = 0;
         struct {
-            Shelf* pshelf = NULL;
-            Bin* pfreebin = NULL;
+            Shelf* pshelf = nullptr;
+            Bin* pfreebin = nullptr;
             int32_t waste = INT32_MAX;
         } best;
 
@@ -356,12 +354,12 @@ public:
             return packOne(id, w, h);  // retry
         }
 
-        return NULL;
+        return nullptr;
     }
 
 
     /**
-     * Return a packed bin given its id, or NULL if the id is not found
+     * Return a packed bin given its id, or nullptr if the id is not found
      *
      * @param    {int32_t}  id  Unique identifier for this bin,
      * @returns  {Bin*}     Pointer to a packed Bin with `id`, `x`, `y`, `w`, `h` members
@@ -370,8 +368,8 @@ public:
      * Bin* result = sprite.getBin(5);
      */
     Bin* getBin(int32_t id) {
-        std::map<int32_t, Bin*>::iterator it = bins_.find(id);
-        return (it == bins_.end()) ? NULL : it->second;
+        std::map<int32_t, Bin*>::iterator it = usedbins_.find(id);
+        return (it == usedbins_.end()) ? nullptr : it->second;
     }
 
 
@@ -382,8 +380,8 @@ public:
      * @returns  {int32_t}   New refcount of the bin
      *
      * @example
-     * optional<Bin> bin = sprite.getBin(5);
-     * if (bin != nullopt) {
+     * Bin* bin = sprite.getBin(5);
+     * if (bin) {
      *     sprite.ref(bin);
      * }
      */
@@ -406,8 +404,8 @@ public:
      * @returns  {int32_t}  New refcount of the bin
      *
      * @example
-     * optional<Bin> bin = sprite.getBin(5);
-     * if (bin != nullopt) {
+     * Bin* bin = sprite.getBin(5);
+     * if (bin) {
      *     sprite.unref(bin);
      * }
      */
@@ -418,7 +416,7 @@ public:
 
         if (--bin.refcount_ == 0) {
             stats_[bin.h]--;
-            bins_.erase(bin.id);
+            usedbins_.erase(bin.id);
             freebins_.push_back(&bin);
         }
 
@@ -427,26 +425,15 @@ public:
 
 
     /**
-     * Clear the sprite. Frees all bins, resets all statistics,
-     *   and frees all dynamically allocated memory.
-     *
-     * Warning: any previously returned `Bin*` pointers will be
-     *   invalid after calling clear.
+     * Clear the sprite and reset statistics.
      *
      * @example
      * sprite.clear();
      */
     void clear() {
-        for (auto& kv : bins_) {
-            delete kv.second;
-        }
-        for (auto& freebin : freebins_) {
-            delete freebin;
-        }
-
-        bins_.clear();
         shelves_.clear();
         freebins_.clear();
+        usedbins_.clear();
         stats_.clear();
         maxId_ = 0;
     }
@@ -496,7 +483,7 @@ private:
         bin.w = w;
         bin.h = h;
         bin.refcount_ = 0;
-        bins_[id] = &bin;
+        usedbins_[id] = &bin;
         ref(bin);
         return &bin;
     }
@@ -519,7 +506,7 @@ private:
     Bin* allocShelf(Shelf& shelf, int32_t id, int32_t w, int32_t h) {
         Bin* pbin = shelf.alloc(id, w, h);
         if (pbin) {
-            bins_[id] = pbin;
+            usedbins_[id] = pbin;
             ref(*pbin);
         }
         return pbin;
@@ -528,12 +515,13 @@ private:
 
     int32_t width_;
     int32_t height_;
+    int32_t maxId_;
     bool autoResize_;
-    std::map<int32_t, Bin*> bins_;
+
     std::vector<Shelf> shelves_;
+    std::map<int32_t, Bin*> usedbins_;
     std::vector<Bin*> freebins_;
     std::map<int32_t, int32_t> stats_;
-    int32_t maxId_;
 };
 
 
