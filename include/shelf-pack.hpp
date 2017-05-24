@@ -21,7 +21,7 @@ public:
     /**
      * Create a new Bin.
      *
-     * @class  Shelf
+     * @class  Bin
      * @param  {int32_t}  id          Unique bin identifier
      * @param  {int32_t}  [w1=-1]     Width of the new Bin
      * @param  {int32_t}  [h1=-1]     Height of the new Bin
@@ -223,7 +223,7 @@ public:
         std::vector<Bin*> results;
 
         for (auto& bin : bins) {
-            if (bin.w && bin.h) {
+            if (bin.w > 0 && bin.h > 0) {
                 Bin* allocation = packOne(bin.id, bin.w, bin.h);
                 if (!allocation) {
                     continue;
@@ -293,7 +293,7 @@ public:
         for (auto& freebin : freebins_) {
             // exactly the right height and width, use it..
             if (h == freebin->maxh && w == freebin->maxw) {
-                return allocFreebin(*freebin, id, w, h);
+                return allocFreebin(freebin, id, w, h);
             }
             // not enough height or width, skip it..
             if (h > freebin->maxh || w > freebin->maxw) {
@@ -336,7 +336,7 @@ public:
         }
 
         if (best.pfreebin) {
-            return allocFreebin(*best.pfreebin, id, w, h);
+            return allocFreebin(best.pfreebin, id, w, h);
         }
 
         if (best.pshelf) {
@@ -399,7 +399,7 @@ public:
      * @example
      * Bin* bin = sprite.getBin(5);
      * if (bin) {
-     *     sprite.ref(bin);
+     *     sprite.ref(*bin);
      * }
      */
     int32_t ref(Bin& bin) {
@@ -423,7 +423,7 @@ public:
      * @example
      * Bin* bin = sprite.getBin(5);
      * if (bin) {
-     *     sprite.unref(bin);
+     *     sprite.unref(*bin);
      * }
      */
     int32_t unref(Bin& bin) {
@@ -485,24 +485,24 @@ private:
      * Called by packOne() to allocate a bin by reusing an existing freebin
      *
      * @private
-     * @param    {Bin&}       bin    Reference to a freebin to reuse
+     * @param    {Bin*}       bin    Pointer to a freebin to reuse
      * @param    {int32_t}    w      Width of the bin to allocate
      * @param    {int32_t}    h      Height of the bin to allocate
      * @param    {int32_t}    id     Unique identifier for this bin
      * @returns  {Bin*}       Pointer to a Bin with `id`, `x`, `y`, `w`, `h` properties
      *
      * @example
-     * Bin* bin = sprite.allocFreebin(freebin, 12, 16, 5);
+     * Bin* bin = sprite.allocFreebin(pfreebin, 12, 16, 5);
      */
-    Bin* allocFreebin(Bin& bin, int32_t id, int32_t w, int32_t h) {
-        freebins_.erase(std::remove(freebins_.begin(), freebins_.end(), &bin), freebins_.end());
-        bin.id = id;
-        bin.w = w;
-        bin.h = h;
-        bin.refcount_ = 0;
-        usedbins_[id] = &bin;
-        ref(bin);
-        return &bin;
+    Bin* allocFreebin(Bin* bin, int32_t id, int32_t w, int32_t h) {
+        freebins_.erase(std::remove(freebins_.begin(), freebins_.end(), bin), freebins_.end());
+        bin->id = id;
+        bin->w = w;
+        bin->h = h;
+        bin->refcount_ = 0;
+        usedbins_[id] = bin;
+        ref(*bin);
+        return bin;
     }
 
 
