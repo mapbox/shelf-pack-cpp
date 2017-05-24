@@ -535,7 +535,7 @@ private:
     int32_t maxId_;
     bool autoResize_;
 
-    std::vector<Shelf> shelves_;
+    std::deque<Shelf> shelves_;
     std::map<int32_t, Bin*> usedbins_;
     std::vector<Bin*> freebins_;
     std::map<int32_t, int32_t> stats_;
