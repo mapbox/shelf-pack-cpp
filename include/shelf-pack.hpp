@@ -4,6 +4,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cstdint>
+#include <deque>
 #include <map>
 #include <vector>
 
@@ -106,7 +107,7 @@ public:
     /**
      * Allocate a single bin into the shelf.
      * Bin is stored in a `bins_` container.
-     * If the shelf is destroyed, the returned pointer is no longer valid.
+     * Returned pointer is stable until the shelf is destroyed.
      *
      * @param    {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
      * @param    {int32_t}  w     Width of the bin to allocate
@@ -156,7 +157,7 @@ private:
     int32_t h_;
     int32_t wfree_;
 
-    std::vector<Bin> bins_;
+    std::deque<Bin> bins_;
 };
 
 
