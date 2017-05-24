@@ -93,15 +93,15 @@ public:
      * Create a new Shelf.
      *
      * @class  Shelf
-     * @param  {int32_t}  y   Top coordinate of the new shelf
-     * @param  {int32_t}  w   Width of the new shelf
-     * @param  {int32_t}  h   Height of the new shelf
+     * @param  {int32_t}  y1   Top coordinate of the new shelf
+     * @param  {int32_t}  w1   Width of the new shelf
+     * @param  {int32_t}  h1   Height of the new shelf
      *
      * @example
      * Shelf shelf(64, 512, 24);
      */
-    explicit Shelf(int32_t y, int32_t w, int32_t h) :
-        x_(0), y_(y), w_(w), h_(h), wfree_(w) { }
+    explicit Shelf(int32_t y1, int32_t w1, int32_t h1) :
+        x_(0), y_(y1), w_(w1), h_(h1), wfree_(w1) { }
 
 
     /**
@@ -110,21 +110,21 @@ public:
      * Returned pointer is stable until the shelf is destroyed.
      *
      * @param    {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
-     * @param    {int32_t}  w     Width of the bin to allocate
-     * @param    {int32_t}  h     Height of the bin to allocate
+     * @param    {int32_t}  w1     Width of the bin to allocate
+     * @param    {int32_t}  h1     Height of the bin to allocate
      * @returns  {Bin*}     `Bin` pointer with `id`, `x`, `y`, `w`, `h` members
      *
      * @example
      * Bin* result = shelf.alloc(-1, 12, 16);
      */
-    Bin* alloc(int32_t id, int32_t w, int32_t h) {
-        if (w > wfree_ || h > h_) {
+    Bin* alloc(int32_t id, int32_t w1, int32_t h1) {
+        if (w1 > wfree_ || h1 > h_) {
             return nullptr;
         }
-        int32_t x = x_;
-        x_ += w;
-        wfree_ -= w;
-        bins_.emplace_back(id, w, h, w, h_, x, y_);
+        int32_t x1 = x_;
+        x_ += w1;
+        wfree_ -= w1;
+        bins_.emplace_back(id, w1, h1, w1, h_, x1, y_);
         return &bins_.back();
     }
 
@@ -132,15 +132,15 @@ public:
     /**
      * Resize the shelf.
      *
-     * @param    {int32_t}  w  Requested new width of the shelf
+     * @param    {int32_t}  w1  Requested new width of the shelf
      * @returns  {bool}     `true` if resize succeeded, `false` if failed
      *
      * @example
      * shelf.resize(512);
      */
-    bool resize(int32_t w) {
-        wfree_ += (w - w_);
-        w_ = w;
+    bool resize(int32_t w1) {
+        wfree_ += (w1 - w_);
+        w_ = w1;
         return true;
     }
 
