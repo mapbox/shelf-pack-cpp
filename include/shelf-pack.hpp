@@ -1,6 +1,7 @@
 #ifndef SHELF_PACK_HPP
 #define SHELF_PACK_HPP
 
+#include <iostream>
 #include <algorithm>
 #include <cstdint>
 #include <map>
@@ -19,7 +20,6 @@ public:
     /**
      * Create a new Bin.
      *
-     * @private
      * @class  Shelf
      * @param  {int32_t}  id          Unique bin identifier
      * @param  {int32_t}  [w1=-1]     Width of the new Bin
@@ -66,13 +66,31 @@ private:
 };
 
 
+/*
+ * Custom ostream<< overload for printing Bin details
+ *
+ * @param    {ostream&}    os    output stream to print to
+ * @param    {const Bin&}  bin   Bin to print
+ * @returns  {ostream&}    output stream
+ *
+ * @example
+ * std::cout << *sprite.getBin(5) << std::endl;
+ */
+std::ostream& operator<<(std::ostream& os, const Bin& bin) {
+    os << "Bin { id: " << bin.id
+        << ", x: " << bin.x << ", y: " << bin.y
+        << ", w: " << bin.w << ", h: " << bin.h
+        << ", maxw: " << bin.maxw << ", maxh: " << bin.maxh
+        << ", refcount: " << bin.refcount() << " }";
+    return os;
+}
+
 
 class Shelf {
 public:
     /**
      * Create a new Shelf.
      *
-     * @private
      * @class  Shelf
      * @param  {int32_t}  y   Top coordinate of the new shelf
      * @param  {int32_t}  w   Width of the new shelf
@@ -90,7 +108,6 @@ public:
      * Bin is stored in a `bins_` container.
      * If the shelf is destroyed, the returned pointer is no longer valid.
      *
-     * @private
      * @param    {int32_t}  id    Unique bin identifier, pass -1 to generate a new one
      * @param    {int32_t}  w     Width of the bin to allocate
      * @param    {int32_t}  h     Height of the bin to allocate
@@ -114,7 +131,6 @@ public:
     /**
      * Resize the shelf.
      *
-     * @private
      * @param    {int32_t}  w  Requested new width of the shelf
      * @returns  {bool}     `true` if resize succeeded, `false` if failed
      *
