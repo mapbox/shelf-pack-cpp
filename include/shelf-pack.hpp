@@ -1,7 +1,6 @@
 #ifndef SHELF_PACK_HPP
 #define SHELF_PACK_HPP
 
-#include <iostream>
 #include <algorithm>
 #include <cstdint>
 #include <deque>
@@ -65,26 +64,6 @@ private:
 
     int32_t refcount_;
 };
-
-
-/*
- * Custom ostream<< overload for printing Bin details
- *
- * @param    {ostream&}    os    output stream to print to
- * @param    {const Bin&}  bin   Bin to print
- * @returns  {ostream&}    output stream
- *
- * @example
- * std::cout << *sprite.getBin(5) << std::endl;
- */
-std::ostream& operator<<(std::ostream& os, const Bin& bin) {
-    os << "Bin { id: " << bin.id
-        << ", x: " << bin.x << ", y: " << bin.y
-        << ", w: " << bin.w << ", h: " << bin.h
-        << ", maxw: " << bin.maxw << ", maxh: " << bin.maxh
-        << ", refcount: " << bin.refcount() << " }";
-    return os;
-}
 
 
 class Shelf {

@@ -5,6 +5,28 @@
 
 using namespace mapbox;
 
+
+/*
+ * Custom ostream<< overload for printing Bin details
+ * Useful for debugging.
+ *
+ * @param    {ostream&}    os    output stream to print to
+ * @param    {const Bin&}  bin   Bin to print
+ * @returns  {ostream&}    output stream
+ *
+ * @example
+ * std::cout << *sprite.getBin(5) << std::endl;
+ */
+std::ostream& operator<<(std::ostream& os, const Bin& bin) {
+    os << "Bin { id: " << bin.id
+        << ", x: " << bin.x << ", y: " << bin.y
+        << ", w: " << bin.w << ", h: " << bin.h
+        << ", maxw: " << bin.maxw << ", maxh: " << bin.maxh
+        << ", refcount: " << bin.refcount() << " }";
+    return os;
+}
+
+
 void testVersion() {
     std::cout << "has a version";
     std::string version(SHELF_PACK_VERSION);
