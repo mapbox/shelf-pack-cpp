@@ -44,5 +44,14 @@
         'test/test.cpp'
       ],
     },
+    { 'target_name': 'bench',
+      'type': 'executable',
+      'include_dirs': [
+        'include',
+      ],
+      'sources': [
+        'bench/bench.cpp'
+      ],
+    },
   ],
 }
