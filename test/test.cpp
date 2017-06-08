@@ -815,6 +815,23 @@ void testClear() {
     std::cout << " - OK" << std::endl;
 }
 
+void testShrink() {
+    std::cout << "shrink succeeds";
+
+    ShelfPack sprite(20, 20);
+    sprite.packOne(-1, 10, 5);
+
+    assert(sprite.width() == 20);
+    assert(sprite.height() == 20);
+
+    sprite.shrink();
+
+    assert(sprite.width() == 10);
+    assert(sprite.height() == 5);
+
+    std::cout << " - OK" << std::endl;
+}
+
 void testResize1() {
     std::cout << "resize larger succeeds";
 

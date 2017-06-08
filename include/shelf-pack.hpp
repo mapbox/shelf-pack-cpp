@@ -216,21 +216,7 @@ public:
             }
         }
 
-        // Shrink the width/height of the sprite to the bare minimum.
-        // Since shelf-pack doubles first width, then height when running out of shelf space
-        // this can result in fairly large unused space both in width and height if that happens
-        // towards the end of bin packing.
-        if (shelves_.size()) {
-            int32_t w2 = 0;
-            int32_t h2 = 0;
-
-            for (auto& shelf : shelves_) {
-                h2 += shelf.h();
-                w2 = std::max(shelf.w() - shelf.wfree(), w2);
-            }
-
-            resize(w2, h2);
-        }
+        shrink();
 
         return results;
     }
@@ -351,6 +337,28 @@ public:
         }
 
         return nullptr;
+    }
+
+
+    /**
+     *
+     * Shrink the width/height of the sprite to the bare minimum.
+     * Since shelf-pack doubles first width, then height when running out of shelf space
+     * this can result in fairly large unused space both in width and height if that happens
+     * towards the end of bin packing.
+     */
+    void shrink() {
+        if (shelves_.size()) {
+            int32_t w2 = 0;
+            int32_t h2 = 0;
+
+            for (auto& shelf : shelves_) {
+                h2 += shelf.h();
+                w2 = std::max(shelf.w() - shelf.wfree(), w2);
+            }
+
+            resize(w2, h2);
+        }
     }
 
 
