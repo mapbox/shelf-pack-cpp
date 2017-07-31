@@ -10,7 +10,7 @@
 
 namespace mapbox {
 
-const char * const SHELF_PACK_VERSION = "2.1.0";
+const char * const SHELF_PACK_VERSION = "2.1.1";
 
 
 
