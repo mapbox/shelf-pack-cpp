@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <deque>
+#include <limits>
 #include <map>
 #include <vector>
 
@@ -239,7 +240,7 @@ public:
         struct {
             Shelf* pshelf = nullptr;
             Bin* pfreebin = nullptr;
-            int32_t waste = INT32_MAX;
+            int32_t waste = std::numeric_limits<std::int32_t>::max();
         } best;
 
         // if id was supplied, attempt a lookup..
