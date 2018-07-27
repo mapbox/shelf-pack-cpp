@@ -1,4 +1,4 @@
-#include <shelf-pack.hpp>
+#include <mapbox/shelf-pack.hpp>
 
 #include <cassert>
 #include <iostream>

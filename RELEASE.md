@@ -7,7 +7,7 @@ Assumes documentation.js v4 has been installed globally:
 
 - [ ] git checkout master
 - [ ] Update CHANGELOG
-- [ ] Update version number in `include/shelf-pack.hpp` and `makedocs.sh`
+- [ ] Update version number in `include/mapbox/shelf-pack.hpp` and `makedocs.sh`
 - [ ] ./makedocs.sh
 - [ ] git add .
 - [ ] git commit -m 'vA.B.C'
