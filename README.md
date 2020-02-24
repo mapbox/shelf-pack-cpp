@@ -28,7 +28,7 @@ rectangles vary significantly in height.
 #### Basic Usage
 
 ```cpp
-#include <shelf-pack.hpp>
+#include <mapbox/shelf-pack.hpp>
 #include <iostream>
 
 using namespace mapbox;
@@ -72,7 +72,7 @@ void main(void) {
 #### Batch packing
 
 ```cpp
-#include <shelf-pack.hpp>
+#include <mapbox/shelf-pack.hpp>
 #include <iostream>
 
 void main(void) {
@@ -133,7 +133,7 @@ void main(void) {
 #### Reference Counting
 
 ```cpp
-#include <shelf-pack.hpp>
+#include <mapbox/shelf-pack.hpp>
 #include <iostream>
 #include <array>
 
